@@ -1,11 +1,41 @@
 import 'package:blood_donation_app/components/custom_auth_button.dart';
+import 'package:blood_donation_app/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class ForgotPasswordScreen extends StatelessWidget {
+class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+}
+
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final TextEditingController _emailController = TextEditingController();
+
+  void _sendResetEmail() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      // Empty field
+      return;
+    }
+
+    await authProvider.resetPassword(email);
+
+    if (authProvider.errorMessage == null) {
+      // Link sent
+      Navigator.pop(context);
+    } else {
+      // Error sending link
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+
     return Scaffold(
       body: Stack(
         children: [
@@ -34,10 +64,10 @@ class ForgotPasswordScreen extends StatelessWidget {
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.lock_outline_rounded),
-                        const SizedBox(width: 6),
-                        const Text(
+                      children: const [
+                        Icon(Icons.lock_outline_rounded),
+                        SizedBox(width: 6),
+                        Text(
                           "FORGOT PASSWORD",
                           textAlign: TextAlign.center,
                           style: TextStyle(
@@ -58,8 +88,9 @@ class ForgotPasswordScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 24),
 
-                    const TextField(
-                      decoration: InputDecoration(
+                    TextField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
                         labelText: "Email",
                         border: OutlineInputBorder(),
                       ),
@@ -81,8 +112,8 @@ class ForgotPasswordScreen extends StatelessWidget {
                     const SizedBox(height: 24),
 
                     CustomAuthButton(
-                      label: "Send Link",
-                      onPressed: () {},
+                      label: authProvider.isLoading ? "Sending..." : "Send Link",
+                      onPressed: authProvider.isLoading ? null : _sendResetEmail,
                     ),
                   ],
                 ),

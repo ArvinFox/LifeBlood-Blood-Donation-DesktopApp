@@ -1,4 +1,6 @@
+import 'package:blood_donation_app/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class DonorsPage extends StatelessWidget {
   const DonorsPage({super.key});
@@ -26,10 +28,17 @@ class DonorsPage extends StatelessWidget {
                 ),
 
                 Row(
-                  children: const [
+                  children: [
                     Icon(Icons.notifications_none, color: Colors.white),
                     SizedBox(width: 20),
-                    Icon(Icons.power_settings_new, color: Colors.white),
+                    IconButton(
+                      onPressed: () {
+                        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+                        authProvider.logout();
+                      },
+                      icon: Icon(Icons.power_settings_new, color: Colors.white),
+                    ),
                   ],
                 ),
               ],
