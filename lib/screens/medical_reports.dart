@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:blood_donation_app/components/table.dart';
 
-class DonorsPage extends StatelessWidget {
-  const DonorsPage({super.key});
+class MedicalReportsPage extends StatelessWidget {
+  const MedicalReportsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -12,68 +12,68 @@ class DonorsPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Donors',
+            'Medical Reports',
             style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 20),
-
-          // Using DynamicTable to display donor data
           DynamicTable(
             columns: [
               'ID',
-              'Name',
-              'Blood Type',
-              'Contact',
-              'Address',
-              'Action',
+              'User Name',
+              'Medical Report',
+              'View Report',
+              'Approve / Reject',
             ],
             rows: [
               [
                 '1',
                 'John Doe',
-                'A+',
-                '0771234567',
-                'Colombo',
+                'Blood Test',
                 Center(
                   child: SizedBox(
                     width: 100,
                     child: ElevatedButton(
                       onPressed: () {},
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFFFFAE42),
-                        foregroundColor: Colors.white,
+                        backgroundColor: Color.fromARGB(255, 46, 126, 216),
+                        foregroundColor: Color.fromARGB(255, 255, 255, 255),
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5),
+                          borderRadius: BorderRadius.circular(5), 
                         ),
                       ),
                       child: Text("View"),
                     ),
                   ),
                 ),
-              ], // Empty for now, will handle button in the table
-              [
-                '2',
-                'Alice Smith',
-                'B-',
-                '0787654321',
-                'Galle',
-                Center(
-                  child: SizedBox(
-                    width: 100,
-                    child: ElevatedButton(
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
                       onPressed: () {},
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFFFFAE42),
+                        backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5),
+                          borderRadius: BorderRadius.circular(5), 
                         ),
                       ),
-                      child: Text("View"),
+                      child: Text("Approve"),
                     ),
-                  ),
+                    ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5), 
+                        ),
+                      ),
+                      child: Text("Reject"),
+                    ),
+                  ],
                 ),
               ],
             ],

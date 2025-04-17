@@ -25,12 +25,17 @@ class DynamicTable extends StatelessWidget {
         ...rows.map((row) {
           return TableRow(
             children: row.map((cell) {
-              // Check if the cell is the "action" column (i.e., the last column)
-              if (row.indexOf(cell) == row.length - 1 && cell is String) {
-                return _viewButton(); // Add View button in the last column
-              } else {
-                return _tableCell(cell.toString()); // Normal cell (ensure all content is string)
+              if(cell is Widget){
+                return Padding(padding: const EdgeInsets.all(8),child: cell,);
+              } else{
+                return _tableCell(cell.toString());
               }
+              // // Check if the cell is the "action" column (i.e., the last column)
+              // if (row.indexOf(cell) == row.length - 1 && cell is String) {
+              //   return _viewButton(context); // Add View button in the last column
+              // } else {
+              //   return _tableCell(cell.toString()); // Normal cell (ensure all content is string)
+              // }
             }).toList(),
           );
         }).toList(),
