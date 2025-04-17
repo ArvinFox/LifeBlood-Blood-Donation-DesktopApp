@@ -13,7 +13,7 @@ class MainLayoutScreen extends StatelessWidget {
           Container(
             height: 80,
             color: Colors.red[700],
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 80),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
