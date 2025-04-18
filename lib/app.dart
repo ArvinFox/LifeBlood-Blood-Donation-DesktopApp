@@ -1,5 +1,6 @@
 import 'package:blood_donation_app/layout/main_layout_screen.dart';
 import 'package:blood_donation_app/providers/auth_provider.dart';
+import 'package:blood_donation_app/routes/app_routes.dart';
 import 'package:blood_donation_app/screens/medical_reports.dart';
 import 'package:flutter/material.dart';
 import 'package:blood_donation_app/screens/auth/login_screen.dart';
@@ -17,6 +18,7 @@ class LifeBlood extends StatelessWidget {
           return MaterialApp(
             title: "LifeBlood",
             debugShowCheckedModeBanner: false,
+            routes: UserRoutes.routes,
             home: authProvider.currentUser == null
               ? const LoginScreen()
               : const MainLayoutScreen(child: MedicalReportsPage(),), // Dashboard

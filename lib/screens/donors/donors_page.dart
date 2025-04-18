@@ -11,9 +11,11 @@ class DonorsPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Donors',
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+          Center(
+            child: const Text(
+              'Donors',
+              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+            ),
           ),
           const SizedBox(height: 20),
 

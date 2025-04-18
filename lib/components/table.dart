@@ -65,21 +65,21 @@ class DynamicTable extends StatelessWidget {
     );
   }
 
-  // Widget for the View Button
-  static Widget _viewButton() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: TextButton(
-        onPressed: () {
-          // Add action for the button press (e.g., navigate to view details page)
-        },
-        style: TextButton.styleFrom(
-          backgroundColor: Colors.orange,
-          foregroundColor: Colors.white,
-          minimumSize: const Size(60, 30),
-        ),
-        child: const Text('View'),
-      ),
-    );
-  }
+  // // Widget for the View Button
+  // static Widget _viewButton() {
+  //   return Padding(
+  //     padding: const EdgeInsets.all(8.0),
+  //     child: TextButton(
+  //       onPressed: () {
+  //         // Add action for the button press (e.g., navigate to view details page)
+  //       },
+  //       style: TextButton.styleFrom(
+  //         backgroundColor: Colors.orange,
+  //         foregroundColor: Colors.white,
+  //         minimumSize: const Size(60, 30),
+  //       ),
+  //       child: const Text('View'),
+  //     ),
+  //   );
+  // }
 }

@@ -11,9 +11,11 @@ class MedicalReportsPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Medical Reports',
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+          Center(
+            child: const Text(
+              'Medical Reports',
+              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+            ),
           ),
           const SizedBox(height: 20),
           DynamicTable(
