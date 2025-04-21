@@ -27,7 +27,7 @@ class _AddDataState extends State<AddData> {
 
   DateTime? _selectedDate;
   DateTime? _selectedEventDate;
-  String? _uploadedFileName;
+  String? _uploadedImageName;
 
   @override
   Widget build(BuildContext context) {
@@ -102,10 +102,10 @@ class _AddDataState extends State<AddData> {
                   ),
                 ),
                 SizedBox(height: 10),
-                MedicalReportPicker(
-                  onFileUploaded: (base64String) {
+                PosterPicker(
+                  onImageUploaded: (base64String) {
                     setState(() {
-                      _uploadedFileName = base64String; 
+                      _uploadedImageName = base64String; 
                     });
                   },
                 ),
@@ -186,6 +186,7 @@ class _AddDataState extends State<AddData> {
                 'endDate': _controllers['endDate']!.text,
                 'eventTime': _controllers['eventTime']!.text,
                 'eventDate': _controllers['eventDate']!.text,
+                'poster': _uploadedImageName,
               };
 
               print("Form Data: $formData"); 
@@ -289,16 +290,16 @@ class _AddDataState extends State<AddData> {
 
 }
 
-class MedicalReportPicker extends StatefulWidget {
-  final Function(String)? onFileUploaded;
+class PosterPicker extends StatefulWidget {
+  final Function(String)? onImageUploaded;
 
-  const MedicalReportPicker({super.key, this.onFileUploaded});
+  const PosterPicker({super.key, this.onImageUploaded});
 
   @override
-  State<MedicalReportPicker> createState() => _MedicalReportPickerState();
+  State<PosterPicker> createState() => _PosterPickerState();
 }
 
-class _MedicalReportPickerState extends State<MedicalReportPicker> {
+class _PosterPickerState extends State<PosterPicker> {
   String text = 'Select Poster';
   Color btnColor = Colors.white;
 
@@ -310,24 +311,24 @@ class _MedicalReportPickerState extends State<MedicalReportPicker> {
     );
 
     if (result != null) {
-      final fileBytes = result.files.single.bytes;
-      final fileName = result.files.single.name;
+      final imageBytes = result.files.single.bytes;
+      final imageName = result.files.single.name;
 
-      if (fileBytes != null) {
+      if (imageBytes != null) {
         try {
-          String base64String = base64Encode(fileBytes);
+          String base64String = base64Encode(imageBytes);
 
           setState(() {
             text =
-                fileName.length > 20
-                    ? "${fileName.substring(0, 20)}...."
-                    : fileName;
+                imageName.length > 20
+                    ? "${imageName.substring(0, 20)}...."
+                    : imageName;
             btnColor = Colors.red;
           });
 
-          widget.onFileUploaded?.call(base64String);
+          widget.onImageUploaded?.call(base64String);
         } catch (e) {
-          print('Error encoding the file: $e');
+          print('Error encoding the image: $e');
         }
       }
     }

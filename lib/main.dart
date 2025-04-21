@@ -2,6 +2,7 @@ import 'package:blood_donation_app/app.dart';
 import 'package:blood_donation_app/constants/app_credentials.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +16,12 @@ void main() async {
       storageBucket: AppCredentials.storageBucket
     ),
   );
+
+  await Supabase.initialize(
+    url: AppCredentials.supabaseUrl,
+    anonKey: AppCredentials.supabaseAnonKey,
+  );
+  
   runApp(const MyApp());
 }
 
