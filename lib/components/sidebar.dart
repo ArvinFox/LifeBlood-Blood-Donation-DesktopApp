@@ -5,30 +5,81 @@ class Sidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 260,
-      height: MediaQuery.of(context).size.height,
-      color: Colors.white,
-      child: Column(
-        children: [
-          Expanded(
-            child: Column(
-              children: [
-                _navItem(context, Icons.dashboard, 'Dashboard', '/dashboard'),
-                _divider(),
-                _navItem(context, Icons.person, 'Donors', '/donors'),
-                _divider(),
-                _navItem(context, Icons.search, 'Request Donors', '/request-donors'),
-                _divider(),
-                _navItem(context, Icons.description, 'Medical Reports', '/medical-reports'),
-                _divider(),
-                _navItem(context, Icons.event, 'Events', '/events'),
-                _divider(),
-                _navItem(context, Icons.card_giftcard, 'Rewards', '/rewards'),
-              ],
-            ),
+    final currentRoute = ModalRoute.of(context)?.settings.name;
+
+    return Material(
+      elevation: 6,
+      borderRadius: const BorderRadius.only(
+        topRight: Radius.circular(12),
+        bottomRight: Radius.circular(12),
+      ),
+      child: Container(
+        width: 260,
+        height: MediaQuery.of(context).size.height,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.only(
+            topRight: Radius.circular(12),
+            bottomRight: Radius.circular(12),
           ),
-        ],
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: Column(
+                children: [
+                  _navItem(
+                    context,
+                    Icons.dashboard,
+                    'Dashboard',
+                    '/dashboard',
+                    currentRoute,
+                  ),
+                  _divider(),
+                  _navItem(
+                    context,
+                    Icons.person,
+                    'Donors',
+                    '/donors',
+                    currentRoute,
+                  ),
+                  _divider(),
+                  _navItem(
+                    context,
+                    Icons.search,
+                    'Request Donors',
+                    '/request-donors',
+                    currentRoute,
+                  ),
+                  _divider(),
+                  _navItem(
+                    context,
+                    Icons.description,
+                    'Medical Reports',
+                    '/medical-reports',
+                    currentRoute,
+                  ),
+                  _divider(),
+                  _navItem(
+                    context,
+                    Icons.event,
+                    'Events',
+                    '/events',
+                    currentRoute,
+                  ),
+                  _divider(),
+                  _navItem(
+                    context,
+                    Icons.card_giftcard,
+                    'Rewards',
+                    '/rewards',
+                    currentRoute,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -37,26 +88,42 @@ class Sidebar extends StatelessWidget {
     BuildContext context,
     IconData icon,
     String label,
-    String? routeName,
+    String routeName,
+    String? currentRoute,
   ) {
+    final bool active = currentRoute == routeName;
+
     return Expanded(
       child: InkWell(
-        onTap: routeName != null
-            ? () {
-                Navigator.pushNamed(context, routeName);
-              }
-            : null,
-        hoverColor: Colors.grey[200],
+        onTap: () {
+          if (!active) {
+            Navigator.pushReplacementNamed(context, routeName);
+          }
+        },
+        hoverColor: Colors.grey[100],
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           alignment: Alignment.centerLeft,
+          decoration: BoxDecoration(
+            border:
+                active
+                    ? const Border(
+                      left: BorderSide(color: Colors.red, width: 4),
+                    )
+                    : null,
+            color: active ? Colors.red.withOpacity(0.05) : null,
+          ),
           child: Row(
             children: [
-              Icon(icon, color: Colors.black87, size: 26),
+              Icon(icon, color: Colors.blueGrey, size: 24),
               const SizedBox(width: 12),
               Text(
                 label,
-                style: const TextStyle(fontSize: 21, color: Colors.black, fontWeight: FontWeight.w400),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: active ? Colors.red : Colors.black87,
+                ),
               ),
             ],
           ),
@@ -66,10 +133,6 @@ class Sidebar extends StatelessWidget {
   }
 
   Widget _divider() {
-    return const Divider(
-      height: 1,
-      thickness: 1,
-      color: Color(0xFFE0E0E0),
-    );
+    return const Divider(height: 1, thickness: 1, color: Color(0xFFE0E0E0));
   }
 }
