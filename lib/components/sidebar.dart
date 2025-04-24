@@ -16,9 +16,9 @@ class Sidebar extends StatelessWidget {
       child: Container(
         width: 260,
         height: MediaQuery.of(context).size.height,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: const BorderRadius.only(
+          borderRadius: BorderRadius.only(
             topRight: Radius.circular(12),
             bottomRight: Radius.circular(12),
           ),
@@ -105,12 +105,11 @@ class Sidebar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           alignment: Alignment.centerLeft,
           decoration: BoxDecoration(
-            border:
-                active
-                    ? const Border(
-                      left: BorderSide(color: Colors.red, width: 4),
-                    )
-                    : null,
+            border: active
+                ? const Border(
+                    left: BorderSide(color: Colors.red, width: 4),
+                  )
+                : null,
             color: active ? Colors.red.withOpacity(0.05) : null,
           ),
           child: Row(

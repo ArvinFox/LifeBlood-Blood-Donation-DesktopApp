@@ -13,23 +13,10 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _emailController = TextEditingController();
 
-  void _sendResetEmail() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final email = _emailController.text.trim();
-
-    if (email.isEmpty) {
-      // Empty field
-      return;
-    }
-
-    await authProvider.resetPassword(email);
-
-    if (authProvider.errorMessage == null) {
-      // Link sent
-      Navigator.pop(context);
-    } else {
-      // Error sending link
-    }
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
   }
 
   @override
@@ -62,9 +49,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Row(
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         Icon(Icons.lock_outline_rounded),
                         SizedBox(width: 6),
                         Text(
@@ -101,6 +88,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () {
+                          authProvider.resetState();
+
                           Navigator.pop(context);
                         },
                         child: const Text(
@@ -109,11 +98,27 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
+
+                    if (authProvider.errorMessage != null)
+                      Text(
+                        authProvider.errorMessage!,
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontSize: 14,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    const SizedBox(height: 16),
 
                     CustomAuthButton(
-                      label: authProvider.isLoading ? "Sending..." : "Send Link",
-                      onPressed: authProvider.isLoading ? null : _sendResetEmail,
+                      label: "Send Link",
+                      isLoading: authProvider.isLoading,
+                      onPressed: () {
+                        final email = _emailController.text.trim();
+
+                        authProvider.resetPassword(email);
+                      },
                     ),
                   ],
                 ),

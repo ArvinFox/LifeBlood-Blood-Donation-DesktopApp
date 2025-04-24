@@ -1,6 +1,5 @@
 import 'package:blood_donation_app/components/custom_auth_button.dart';
 import 'package:blood_donation_app/providers/auth_provider.dart';
-import 'package:blood_donation_app/screens/auth/forgot_password_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -14,6 +13,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isPasswordVisible = false;
 
   @override
   void dispose() {
@@ -52,12 +52,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Row(
+                        const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.person),
-                            const SizedBox(width: 6),
-                            const Text(
+                            Icon(Icons.person),
+                            SizedBox(width: 6),
+                            Text(
                               "USER LOGIN",
                               textAlign: TextAlign.center,
                               style: TextStyle(
@@ -82,10 +82,18 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 16),
                         TextField(
                           controller: _passwordController,
-                          obscureText: true,
-                          decoration: const InputDecoration(
+                          obscureText: !_isPasswordVisible,
+                          decoration: InputDecoration(
                             labelText: "Password",
-                            border: OutlineInputBorder(),
+                            border: const OutlineInputBorder(),
+                            suffixIcon: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _isPasswordVisible = !_isPasswordVisible;
+                                });
+                              },
+                              icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -94,9 +102,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           alignment: Alignment.centerRight,
                           child: TextButton(
                             onPressed: () {
-                              Navigator.push(
+                              _emailController.text = "";
+                              _passwordController.text = "";
+                              _isPasswordVisible = false;
+                              authProvider.resetState();
+                              
+                              Navigator.pushNamed(
                                 context, 
-                                MaterialPageRoute(builder: (context) => const ForgotPasswordScreen())
+                                '/forgot-password',
                               );
                             },
                             child: const Text(
@@ -118,22 +131,16 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         const SizedBox(height: 16),
 
-                        authProvider.isLoading
-                          ? const Center(child: CircularProgressIndicator())
-                          : CustomAuthButton(
-                              label: "Login",
-                              onPressed: () {
-                                final email = _emailController.text.trim();
-                                final password = _passwordController.text.trim();
+                        CustomAuthButton(
+                          label: "Login",
+                          isLoading: authProvider.isLoading,
+                          onPressed: () {
+                            final email = _emailController.text.trim();
+                            final password = _passwordController.text.trim();
 
-                                if (email.isEmpty || password.isEmpty) {
-                                  // Empty fields
-                                  return;
-                                }
-
-                                authProvider.login(email, password);
-                              },
-                            ),
+                            authProvider.login(email, password);
+                          },
+                        ),
                       ],
                     ),
                   );

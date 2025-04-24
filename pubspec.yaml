@@ -1,38 +1,63 @@
 name: blood_donation_app
 description: "A desktop application for managing blood donors and requests for the LifeBlood App."
-publish_to: 'none'
+publish_to: 'none'  # Prevents accidential publishing to pub.dev
 
+# App version
 version: 1.0.0+1
 
+# Flutter SDK environment
 environment:
   sdk: ^3.7.2
 
+# -----------------------------------------------------------------------
+# Dependencies: Core Flutter and Third-party Packages
+# -----------------------------------------------------------------------
 dependencies:
   flutter:
     sdk: flutter
 
+  # Cupertino icons (used on iOS-styled widgets)
   cupertino_icons: ^1.0.8
+  
+  # File picker (for selecting images, documents, etc.)
   file_picker: ^9.0.2
+
+  # Date and time formatting
   intl: ^0.20.2
 
+  # Firebase authentication and core
   firebase_auth: ^5.5.2
   firebase_core: ^3.13.0
+
+  # Firestore database
   cloud_firestore: ^5.6.5
+
+  # Supabase integration (for document/file storage)
   supabase_flutter: ^2.8.4
 
+  # State management
   provider: ^6.1.4
 
+  # Calendar UI
   table_calendar: ^3.2.0
 
+# -----------------------------------------------------------------------
+# Development Dependencies: Linting and Testing
+# -----------------------------------------------------------------------
 dev_dependencies:
   flutter_test:
     sdk: flutter
-    
+  
+  # Linting rules
   flutter_lints: ^5.0.0
 
+# -----------------------------------------------------------------------
+# Flutter Specific Configurations
+# -----------------------------------------------------------------------
 flutter:
   uses-material-design: true
 
+  # Asset directories
   assets:
     - assets/images/
     - assets/icons/

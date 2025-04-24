@@ -3,11 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Get current Firebase user
-  User? get currentUser => _auth.currentUser;
-
-  // List to authentication state changes
-  Stream<User?> get authStateChanges => _auth.authStateChanges();
+  // Get the authentication state changes
+  Stream<User?> getAuthStateChanges() {
+    return _auth.authStateChanges();
+  }
 
   // Sign in with email & password
   Future<UserCredential> signIn(String email, String password) async {

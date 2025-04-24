@@ -23,12 +23,12 @@ class CustomAuthButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(5),
         ),
       ),
-      onPressed: onPressed,
+      onPressed: isLoading! ? null : onPressed,
       child: isLoading!
-        ? CircularProgressIndicator()
+        ? const CircularProgressIndicator()
         : Text(
             label,
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
     );
   }
