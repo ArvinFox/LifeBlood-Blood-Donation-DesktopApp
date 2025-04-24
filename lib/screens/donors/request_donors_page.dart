@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:blood_donation_app/utils/helpers.dart';
+import 'package:blood_donation_app/models/donor_request_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RequestDonorsPage extends StatefulWidget {
   const RequestDonorsPage({super.key});
@@ -47,13 +49,15 @@ class _RequestDonorsPageState extends State<RequestDonorsPage> {
 
   final Map<String, List<String>> cityHospitals = {
     'Colombo': [
+      'Jayawardenapura Genral Hospital',
+      'Castle Ladies Hospital',
       'National Hospital Colombo',
       'Asiri Surgical',
       'Lanka Hospitals',
       'Nawaloka Hospital',
     ],
     'Gampaha': ['Gampaha General Hospital', 'Nawaloka Negombo'],
-    'Kalutara': ['Kalutara General Hospital', 'Nagoda Hospital'],
+    'Kalutara': ['Kalutara General Hospital', 'Nagoda Hospital', 'Horana General Hospital'],
     'Kandy': ['Kandy General Hospital', 'Suwasevana Hospital'],
     'Matale': ['Matale District Hospital'],
     'Nuwara Eliya': ['Nuwara Eliya Base Hospital'],
@@ -146,26 +150,42 @@ class _RequestDonorsPageState extends State<RequestDonorsPage> {
                 child: const Text("Cancel"),
               ),
               ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-
-                  // Testing the data before firebase implementation
-                  print("Request Submitted:");
-                  print("Patient Name: ${patientNameController.text}");
-                  print("Requested By: ${requestedByController.text}");
-                  print("Blood Type: $selectedBloodType");
-                  print("Urgency Level: $selectedUrgency");
-                  print("Quantity: $selectedQuantity");
-                  print("Province: $selectedProvince");
-                  print("City: $selectedCity");
-                  print("Hospital: $selectedHospital");
-
-                  // Reset the form to its original state
-                  _resetForm();
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Request submitted!")),
+                onPressed: () async {
+                  // Create a BloodRequest object
+                  BloodRequest request = BloodRequest(
+                    patientName: patientNameController.text,
+                    requestedBy: requestedByController.text,
+                    requestBloodType: selectedBloodType!,
+                    urgencyLevel: selectedUrgency!,
+                    requestQuantity: selectedQuantity!,
+                    province: selectedProvince!,
+                    city: selectedCity!,
+                    hospitalName: selectedHospital!,
+                    createdAt: Timestamp.fromDate(DateTime.now()),
                   );
+
+                  // Save the request to Firestore
+                  try {
+                    await request.saveRequest();
+                    print("Request saved successfully!");
+
+                    // Reset the form to its original state
+                    _resetForm();
+
+                    // Dismiss the dialog after data is saved
+                    Navigator.pop(context);
+
+                    // Show the snackbar after the data is saved successfully
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Request submitted!")),
+                    );
+                  } catch (e) {
+                    print("Error saving request: $e");
+                    // Optionally, show an error snackbar
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Failed to submit request")),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
