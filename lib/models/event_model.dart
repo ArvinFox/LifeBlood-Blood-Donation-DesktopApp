@@ -6,6 +6,7 @@ class DonationEvents {
   final String description;
   final DateTime dateAndTime;
   final DateTime createdAt;
+  final String location;
 
   DonationEvents({
     this.eventId,
@@ -13,6 +14,7 @@ class DonationEvents {
     required this.description,
     required this.dateAndTime,
     required this.createdAt,
+    required this.location,
   });
 
   Map<String, dynamic> toFirestore() {
@@ -20,7 +22,8 @@ class DonationEvents {
       'event_name': eventName,
       'description': description,
       'date': Timestamp.fromDate(dateAndTime),
-      'created_at': DateTime.now()
+      'created_at': DateTime.now(),
+      'location': location,
     };
   }
 }

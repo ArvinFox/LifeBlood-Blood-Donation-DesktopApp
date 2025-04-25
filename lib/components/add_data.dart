@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
-enum FormType {rewards, events}
+enum FormType { rewards, events }
 
 class AddData extends StatefulWidget {
   final FormType formType;
@@ -23,6 +23,7 @@ class _AddDataState extends State<AddData> {
     'endDate': TextEditingController(),
     'eventDate': TextEditingController(),
     'eventTime': TextEditingController(),
+    'location': TextEditingController(),
   };
 
   DateTime? _selectedDate;
@@ -105,49 +106,79 @@ class _AddDataState extends State<AddData> {
                 PosterPicker(
                   onImageUploaded: (base64String) {
                     setState(() {
-                      _uploadedImageName = base64String; 
+                      _uploadedImageName = base64String;
                     });
                   },
                 ),
                 const SizedBox(height: 25),
+                if(!isReward)...[
+                  Text(
+                  'Location',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black54,
+                  ),
+                ),
+                TextFormField(
+                    controller: _controllers['location'],
+                    decoration: InputDecoration(
+                      hintText: 'Location',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    validator:
+                        (value) =>
+                            value == null || value.isEmpty
+                                ? '* Required'
+                                : null,
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                  ),
+                  SizedBox(height: 20),
+                ], 
                 if (isReward) ...[
                   _buildDatePicker(
-                    'Start Date', 
+                    'Start Date',
                     _controllers['startDate']!,
-                    _selectedDate, 
+                    _selectedDate,
                     (picked) {
                       setState(() {
                         _selectedDate = picked;
-                        _controllers['startDate']!.text ='${picked.day}-${picked.month}-${picked.year}';
+                        _controllers['startDate']!.text =
+                            '${picked.day}-${picked.month}-${picked.year}';
                       });
-                    }, 
-                    'dd-mm-yyyy'
+                    },
+                    'dd-mm-yyyy',
                   ),
                   const SizedBox(height: 25),
                   _buildDatePicker(
-                    'End Date', 
-                     _controllers['endDate']!,
-                    _selectedDate, 
+                    'End Date',
+                    _controllers['endDate']!,
+                    _selectedDate,
                     (picked) {
                       setState(() {
                         _selectedDate = picked;
-                        _controllers['endDate']!.text = '${picked.day}-${picked.month}-${picked.year}';
+                        _controllers['endDate']!.text =
+                            '${picked.day}-${picked.month}-${picked.year}';
                       });
-                    }, 
-                    'dd-mm-yyyy'
+                    },
+                    'dd-mm-yyyy',
                   ),
                 ],
                 if (!isReward) ...[
                   _buildDatePicker(
                     'Date',
                     _controllers['eventDate']!,
-                    _selectedEventDate, (picked) {
+                    _selectedEventDate,
+                    (picked) {
                       setState(() {
                         _selectedEventDate = picked;
-                        _controllers['eventDate']!.text = '${picked.day}-${picked.month}-${picked.year}';
+                        _controllers['eventDate']!.text =
+                            '${picked.day}-${picked.month}-${picked.year}';
                       });
-                    }, 
-                    'dd-mm-yyyy'
+                    },
+                    'dd-mm-yyyy',
                   ),
                   const SizedBox(height: 25),
                   _buildTimePicker(
@@ -155,7 +186,7 @@ class _AddDataState extends State<AddData> {
                     _controllers['eventTime']!,
                     'hh:mm AM/PM',
                   ),
-                ]
+                ],
               ],
             ),
           ),
@@ -186,10 +217,11 @@ class _AddDataState extends State<AddData> {
                 'endDate': _controllers['endDate']!.text,
                 'eventTime': _controllers['eventTime']!.text,
                 'eventDate': _controllers['eventDate']!.text,
+                'location': _controllers['location']!.text,
                 'poster': _uploadedImageName,
               };
 
-              print("Form Data: $formData"); 
+              print("Form Data: $formData");
 
               widget.onSubmit(formData);
               Navigator.pop(context);
@@ -216,13 +248,23 @@ class _AddDataState extends State<AddData> {
     super.dispose();
   }
 
-  Widget _buildDatePicker(String lable,TextEditingController controller,DateTime? selectedDate,Function(DateTime) onDateSelected,String? hintText) {
+  Widget _buildDatePicker(
+    String lable,
+    TextEditingController controller,
+    DateTime? selectedDate,
+    Function(DateTime) onDateSelected,
+    String? hintText,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           lable,
-          style: TextStyle(fontSize: 16,fontWeight: FontWeight.w700,color: Colors.black54),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Colors.black54,
+          ),
         ),
         SizedBox(height: 10),
         TextFormField(
@@ -245,21 +287,29 @@ class _AddDataState extends State<AddData> {
               onDateSelected(pickedDate);
             }
           },
-          validator: (value) =>
-                value == null || value.isEmpty ? '* Required' : null,
-            autovalidateMode: AutovalidateMode.onUserInteraction,
+          validator:
+              (value) => value == null || value.isEmpty ? '* Required' : null,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
         ),
       ],
     );
   }
 
-  Widget _buildTimePicker(String label,TextEditingController controller,String hintText) {
+  Widget _buildTimePicker(
+    String label,
+    TextEditingController controller,
+    String hintText,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.black54),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Colors.black54,
+          ),
         ),
         SizedBox(height: 10),
         TextFormField(
@@ -280,14 +330,13 @@ class _AddDataState extends State<AddData> {
               controller.text = formattedTime;
             }
           },
-          validator: (value) =>
-              value == null || value.isEmpty ? '* Required' : null,
+          validator:
+              (value) => value == null || value.isEmpty ? '* Required' : null,
           autovalidateMode: AutovalidateMode.onUserInteraction,
         ),
       ],
     );
   }
-
 }
 
 class PosterPicker extends StatefulWidget {

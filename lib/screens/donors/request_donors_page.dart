@@ -1,7 +1,9 @@
+import 'package:blood_donation_app/utils/formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:blood_donation_app/utils/helpers.dart';
 import 'package:blood_donation_app/models/donor_request_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 
 class RequestDonorsPage extends StatefulWidget {
   const RequestDonorsPage({super.key});
@@ -14,6 +16,7 @@ class _RequestDonorsPageState extends State<RequestDonorsPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController patientNameController = TextEditingController();
   final TextEditingController requestedByController = TextEditingController();
+  final TextEditingController contactNumberController = TextEditingController();
 
   String? selectedBloodType;
   String? selectedUrgency;
@@ -49,7 +52,7 @@ class _RequestDonorsPageState extends State<RequestDonorsPage> {
 
   final Map<String, List<String>> cityHospitals = {
     'Colombo': [
-      'Jayawardenapura Genral Hospital',
+      'Jayawardenapura General Hospital',
       'Castle Ladies Hospital',
       'National Hospital Colombo',
       'Asiri Surgical',
@@ -57,7 +60,11 @@ class _RequestDonorsPageState extends State<RequestDonorsPage> {
       'Nawaloka Hospital',
     ],
     'Gampaha': ['Gampaha General Hospital', 'Nawaloka Negombo'],
-    'Kalutara': ['Kalutara General Hospital', 'Nagoda Hospital', 'Horana General Hospital'],
+    'Kalutara': [
+      'Kalutara General Hospital',
+      'Nagoda Hospital',
+      'Horana General Hospital',
+    ],
     'Kandy': ['Kandy General Hospital', 'Suwasevana Hospital'],
     'Matale': ['Matale District Hospital'],
     'Nuwara Eliya': ['Nuwara Eliya Base Hospital'],
@@ -127,6 +134,7 @@ class _RequestDonorsPageState extends State<RequestDonorsPage> {
                   children: [
                     buildTableRow("Patient Name", patientNameController.text),
                     buildTableRow("Requested By", requestedByController.text),
+                    buildTableRow("Contact Number",contactNumberController.text),
                     buildTableRow("Blood Type", selectedBloodType!),
                     buildTableRow("Urgency Level", selectedUrgency!),
                     buildTableRow("Quantity", selectedQuantity!),
@@ -151,10 +159,13 @@ class _RequestDonorsPageState extends State<RequestDonorsPage> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  // Create a BloodRequest object
+                  String formattedContact = Formatters.formatPhoneNumber(
+                    contactNumberController.text.trim(),
+                  );
                   BloodRequest request = BloodRequest(
                     patientName: patientNameController.text,
                     requestedBy: requestedByController.text,
+                    contactNumber: formattedContact,
                     requestBloodType: selectedBloodType!,
                     urgencyLevel: selectedUrgency!,
                     requestQuantity: selectedQuantity!,
@@ -164,24 +175,19 @@ class _RequestDonorsPageState extends State<RequestDonorsPage> {
                     createdAt: Timestamp.fromDate(DateTime.now()),
                   );
 
-                  // Save the request to Firestore
                   try {
                     await request.saveRequest();
                     print("Request saved successfully!");
 
-                    // Reset the form to its original state
                     _resetForm();
 
-                    // Dismiss the dialog after data is saved
                     Navigator.pop(context);
 
-                    // Show the snackbar after the data is saved successfully
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("Request submitted!")),
                     );
                   } catch (e) {
                     print("Error saving request: $e");
-                    // Optionally, show an error snackbar
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("Failed to submit request")),
                     );
@@ -212,6 +218,7 @@ class _RequestDonorsPageState extends State<RequestDonorsPage> {
   void _resetForm() {
     patientNameController.clear();
     requestedByController.clear();
+    contactNumberController.clear();
     setState(() {
       selectedBloodType = null;
       selectedUrgency = null;
@@ -248,6 +255,35 @@ class _RequestDonorsPageState extends State<RequestDonorsPage> {
             if (RegExp(r'\d').hasMatch(value)) return 'Cannot contain numbers';
             return null;
           },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContactNumberField({
+    required String label,
+    required TextEditingController controller,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 20)),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          style: const TextStyle(fontSize: 18),
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(10),
+          ],
         ),
       ],
     );
@@ -340,6 +376,12 @@ class _RequestDonorsPageState extends State<RequestDonorsPage> {
                         _buildTextField(
                           label: "Requested By",
                           controller: requestedByController,
+                        ),
+                      ),
+                      _inputBox(
+                        _buildContactNumberField(
+                          label: "Contact Number",
+                          controller: contactNumberController,
                         ),
                       ),
                       _inputBox(

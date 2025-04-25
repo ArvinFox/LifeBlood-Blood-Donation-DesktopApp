@@ -160,6 +160,66 @@ class Rewardscreen extends StatelessWidget {
           ),
     );
   }
+  
+  void _showDeleteConfirmation(BuildContext context, String docId, String rewardName) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text(
+        "Delete Confirmation",
+        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+      ),
+      content: SizedBox(
+        width: 400,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Are you sure you want to delete this reward?',
+              style: TextStyle(fontSize: 18),
+            ),
+            const SizedBox(height: 12),
+            Table(
+              columnWidths: const {
+                0: FixedColumnWidth(120),
+                1: FlexColumnWidth(),
+              },
+              children: [
+                TableRow(children: [
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text(
+                      'Reward Name:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(rewardName),
+                  ),
+                ]),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            Navigator.of(context).pop(); // close the dialog first
+            await deleteReward(context, docId);
+          },
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          child: const Text('Delete', style: TextStyle(color: Colors.white),)
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _styledInput(TextEditingController controller, String label) {
     return TextFormField(
@@ -175,216 +235,216 @@ class Rewardscreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        children: [
-          const Center(
-            child: Text(
-              'Manage Rewards',
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+    return Container(
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          children: [
+            const Center(
+              child: Text(
+                'Manage Rewards',
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton.icon(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder:
-                        (_) => AddData(
-                          formType: FormType.rewards,
-                          onSubmit: (data) async {
-                            await createReward(context, data);
-                          },
-                        ),
-                  );
-                },
-                icon: const Icon(Icons.add_circle, color: Colors.redAccent),
-                label: const Text(
-                  'Add Reward',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.redAccent,
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder:
+                          (_) => AddData(
+                            formType: FormType.rewards,
+                            onSubmit: (data) async {
+                              await createReward(context, data);
+                            },
+                          ),
+                    );
+                  },
+                  icon: const Icon(Icons.add_circle, color: Colors.redAccent),
+                  label: const Text(
+                    'Add Reward',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.redAccent,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              double tableWidth = constraints.maxWidth * 0.95;
-              double columnWidth = tableWidth / 4;
+              ],
+            ),
+            const SizedBox(height: 24),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                double tableWidth = constraints.maxWidth * 0.95;
+                double columnWidth = tableWidth / 4;
 
-              return StreamBuilder<QuerySnapshot>(
-                stream:
-                    FirebaseFirestore.instance
-                        .collection('rewards')
-                        .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const CircularProgressIndicator();
-                  }
+                return StreamBuilder<QuerySnapshot>(
+                  stream:
+                      FirebaseFirestore.instance
+                          .collection('rewards')
+                          .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const CircularProgressIndicator();
+                    }
 
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Text('No rewards found.');
-                  }
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                      return const Text('No rewards found.');
+                    }
 
-                  final docs = snapshot.data!.docs;
+                    final docs = snapshot.data!.docs;
 
-                  return SizedBox(
-                    child: DataTable(
-                      headingRowColor: MaterialStateColor.resolveWith(
-                        (states) => const Color(0xFFE0E0E0),
-                      ),
-                      dataRowColor: MaterialStateColor.resolveWith(
-                        (states) => Colors.grey.shade100,
-                      ),
-                      dataRowHeight: 60,
-                      columnSpacing: 0,
-                      border: TableBorder.all(color: Colors.black54),
-                      columns: [
-                        DataColumn(
-                          label: SizedBox(
-                            width: columnWidth,
-                            child: Center(
-                              child: const Text(
-                                'ID',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
+                    return SizedBox(
+                      child: DataTable(
+                        headingRowColor: MaterialStateColor.resolveWith(
+                          (states) => const Color(0xFFE0E0E0),
                         ),
-                        DataColumn(
-                          label: SizedBox(
-                            width: columnWidth,
-                            child: Center(
-                              child: const Text(
-                                'Reward Name',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
+                        dataRowColor: MaterialStateColor.resolveWith(
+                          (states) => Colors.grey.shade100,
                         ),
-                        DataColumn(
-                          label: SizedBox(
-                            width: columnWidth,
-                            child: Center(
-                              child: const Text(
-                                'Description',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
-                        ),
-                        DataColumn(
-                          label: SizedBox(
-                            width: columnWidth,
-                            child: Center(
-                              child: const Text(
-                                'Actions',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                      rows: List.generate(docs.length, (index) {
-                        final doc = docs[index];
-                        final data = doc.data() as Map<String, dynamic>;
-
-                        return DataRow(
-                          cells: [
-                            DataCell(
-                              SizedBox(
-                                width: columnWidth,
-                                child: Center(child: Text('${index + 1}')),
-                              ),
-                            ),
-                            DataCell(
-                              SizedBox(
-                                width: columnWidth,
-                                child: Center(
-                                  child: Text(data['reward_name'] ?? ''),
+                        dataRowHeight: 60,
+                        columnSpacing: 0,
+                        border: TableBorder.all(color: Colors.black54),
+                        columns: [
+                          DataColumn(
+                            label: SizedBox(
+                              width: columnWidth,
+                              child: Center(
+                                child: const Text(
+                                  'ID',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ),
                             ),
-                            DataCell(
-                              SizedBox(
-                                width: columnWidth,
-                                child: Center(
-                                  child: Text(data['description'] ?? ''),
+                          ),
+                          DataColumn(
+                            label: SizedBox(
+                              width: columnWidth,
+                              child: Center(
+                                child: const Text(
+                                  'Reward Name',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ),
                             ),
-                            DataCell(
-                              SizedBox(
-                                width: columnWidth,
-                                child: Center(
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      ElevatedButton(
-                                        onPressed:
-                                            () => editRewardDialog(
-                                              context,
-                                              doc.id,
-                                              data,
-                                            ),
-                                        style: ElevatedButton.styleFrom(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 30,
-                                            vertical: 15,
-                                          ),
-                                          backgroundColor: Colors.yellow[800],
-                                          foregroundColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              6,
-                                            ),
-                                          ),
-                                        ),
-                                        child: const Text('Edit'),
-                                      ),
-                                      const SizedBox(width: 18),
-                                      ElevatedButton(
-                                        onPressed:
-                                            () => deleteReward(context, doc.id),
-                                        style: ElevatedButton.styleFrom(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 25,
-                                            vertical: 15,
-                                          ),
-                                          backgroundColor: Colors.red,
-                                          foregroundColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              6,
-                                            ),
-                                          ),
-                                        ),
+                          ),
+                          DataColumn(
+                            label: SizedBox(
+                              width: columnWidth,
+                              child: Center(
+                                child: const Text(
+                                  'Description',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: SizedBox(
+                              width: columnWidth,
+                              child: Center(
+                                child: const Text(
+                                  'Actions',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                        rows: List.generate(docs.length, (index) {
+                          final doc = docs[index];
+                          final data = doc.data() as Map<String, dynamic>;
 
-                                        child: const Text('Delete'),
-                                      ),
-                                    ],
+                          return DataRow(
+                            cells: [
+                              DataCell(
+                                SizedBox(
+                                  width: columnWidth,
+                                  child: Center(child: Text('${index + 1}')),
+                                ),
+                              ),
+                              DataCell(
+                                SizedBox(
+                                  width: columnWidth,
+                                  child: Center(
+                                    child: Text(data['reward_name'] ?? ''),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
-                        );
-                      }),
-                    ),
-                  );
-                },
-              );
-            },
-          ),
-        ],
+                              DataCell(
+                                SizedBox(
+                                  width: columnWidth,
+                                  child: Center(
+                                    child: Text(data['description'] ?? ''),
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                SizedBox(
+                                  width: columnWidth,
+                                  child: Center(
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        ElevatedButton(
+                                          onPressed:
+                                              () => editRewardDialog(
+                                                context,
+                                                doc.id,
+                                                data,
+                                              ),
+                                          style: ElevatedButton.styleFrom(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 30,
+                                              vertical: 15,
+                                            ),
+                                            backgroundColor: Colors.yellow[800],
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
+                                          ),
+                                          child: const Text('Edit'),
+                                        ),
+                                        const SizedBox(width: 18),
+                                        ElevatedButton(
+                                          onPressed: () => _showDeleteConfirmation(context, doc.id, data['reward_name']),
+                                          style: ElevatedButton.styleFrom(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 25,
+                                              vertical: 15,
+                                            ),
+                                            backgroundColor: Colors.red,
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
+                                          ),
+
+                                          child: const Text('Delete'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        }),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

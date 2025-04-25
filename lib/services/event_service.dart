@@ -12,6 +12,7 @@ class EventService{
       'description': event.description,
       'date_and_time': event.dateAndTime,
       'created_at': event.createdAt,
+      'location': event.location,
     };
 
     await docRef.set(newEventData); 

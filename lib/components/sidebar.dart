@@ -132,6 +132,6 @@ class Sidebar extends StatelessWidget {
   }
 
   Widget _divider() {
-    return const Divider(height: 1, thickness: 1, color: Color(0xFFE0E0E0));
+    return const Divider(height: 1, thickness: 1, color: Color.fromARGB(255, 224, 224, 224));
   }
 }

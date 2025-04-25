@@ -9,7 +9,7 @@ class BloodRequest {
   String province;
   String city;
   String hospitalName;
-  //String contactNumber; //still not in use in the desktop application
+  String contactNumber;
   Timestamp createdAt;
 
   BloodRequest({
@@ -21,11 +21,10 @@ class BloodRequest {
     required this.province,
     required this.city,
     required this.hospitalName,
-    //required this.contactNumber,
+    required this.contactNumber,
     required this.createdAt,
   });
 
-  // Convert a BloodRequest to a Map for Firestore
   Map<String, dynamic> toMap() {
     return {
       'patientName': patientName,
@@ -36,12 +35,11 @@ class BloodRequest {
       'province': province,
       'city': city,
       'hospitalName': hospitalName,
-      //'contactNumber': contactNumber,
+      'contactNumber': contactNumber,
       'createdAt': createdAt,
     };
   }
 
-  // Create a BloodRequest from a Firestore document snapshot
   factory BloodRequest.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return BloodRequest(
@@ -53,12 +51,11 @@ class BloodRequest {
       province: data['province'],
       city: data['city'],
       hospitalName: data['hospitalName'],
-      //contactNumber: data['contactNumber'],
+      contactNumber: data['contactNumber'],
       createdAt: data['createdAt'],
     );
   }
 
-  // Save the request to Firestore
   Future<void> saveRequest() async {
     CollectionReference requests = FirebaseFirestore.instance.collection(
       'requests',

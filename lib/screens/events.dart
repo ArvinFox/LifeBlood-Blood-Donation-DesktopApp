@@ -30,7 +30,8 @@ class _EventsScreenState extends State<EventsScreen> {
         eventName: data['title'], 
         description: data['description'], 
         dateAndTime: Helpers.combineDateAndTime(data['eventDate'], data['eventTime']), 
-        createdAt: DateTime.now()
+        createdAt: DateTime.now(),
+        location: data['location'],
       );
 
       final eventId = await eventService.addEvent(events);
