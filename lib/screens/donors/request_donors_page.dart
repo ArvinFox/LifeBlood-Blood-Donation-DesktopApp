@@ -252,9 +252,12 @@ class _RequestDonorsPageState extends State<RequestDonorsPage> {
           ),
           validator: (value) {
             if (value == null || value.isEmpty) return 'Required';
-            if (RegExp(r'\d').hasMatch(value)) return 'Cannot contain numbers';
             return null;
           },
+          keyboardType: TextInputType.text,
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]')),
+          ],
         ),
       ],
     );
@@ -284,6 +287,10 @@ class _RequestDonorsPageState extends State<RequestDonorsPage> {
             FilteringTextInputFormatter.digitsOnly,
             LengthLimitingTextInputFormatter(10),
           ],
+          validator: (value) {
+            if (value == null || value.isEmpty) return 'Required';
+            return null;
+          },
         ),
       ],
     );

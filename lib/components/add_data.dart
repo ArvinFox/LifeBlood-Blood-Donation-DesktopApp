@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'package:blood_donation_app/utils/helpers.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 enum FormType { rewards, events }
 
@@ -26,7 +28,8 @@ class _AddDataState extends State<AddData> {
     'location': TextEditingController(),
   };
 
-  DateTime? _selectedDate;
+  DateTime? _selectedStartDate;
+  DateTime? _selectedEndDate;
   DateTime? _selectedEventDate;
   String? _uploadedImageName;
 
@@ -63,6 +66,10 @@ class _AddDataState extends State<AddData> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
+                  keyboardType: TextInputType.text,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]')),
+                  ],
                   validator:
                       (value) =>
                           value == null || value.isEmpty ? '* Required' : null,
@@ -86,6 +93,10 @@ class _AddDataState extends State<AddData> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
+                  keyboardType: TextInputType.text,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]')),
+                  ],
                   maxLines: 10,
                   minLines: 1,
                   validator:
@@ -141,12 +152,17 @@ class _AddDataState extends State<AddData> {
                   _buildDatePicker(
                     'Start Date',
                     _controllers['startDate']!,
-                    _selectedDate,
+                    _selectedStartDate,
                     (picked) {
                       setState(() {
-                        _selectedDate = picked;
+                        _selectedStartDate = picked;
                         _controllers['startDate']!.text =
                             '${picked.day}-${picked.month}-${picked.year}';
+
+                        if (_selectedEndDate != null && _selectedEndDate!.isBefore(picked)) {
+                          _selectedEndDate = null;
+                          _controllers['endDate']!.clear();
+                        }
                       });
                     },
                     'dd-mm-yyyy',
@@ -155,10 +171,14 @@ class _AddDataState extends State<AddData> {
                   _buildDatePicker(
                     'End Date',
                     _controllers['endDate']!,
-                    _selectedDate,
+                    _selectedEndDate,
                     (picked) {
+                      if (_selectedStartDate != null && picked.isBefore(_selectedStartDate!)) {
+                        Helpers.showError(context, 'End date cannot be before start date');
+                        return;
+                      }
                       setState(() {
-                        _selectedDate = picked;
+                        _selectedEndDate = picked;
                         _controllers['endDate']!.text =
                             '${picked.day}-${picked.month}-${picked.year}';
                       });
@@ -279,7 +299,7 @@ class _AddDataState extends State<AddData> {
             DateTime? pickedDate = await showDatePicker(
               context: context,
               initialDate: selectedDate ?? DateTime.now(),
-              firstDate: DateTime(2000),
+              firstDate: DateTime.now(),
               lastDate: DateTime(2100),
               initialEntryMode: DatePickerEntryMode.calendarOnly,
             );
@@ -368,10 +388,9 @@ class _PosterPickerState extends State<PosterPicker> {
           String base64String = base64Encode(imageBytes);
 
           setState(() {
-            text =
-                imageName.length > 20
-                    ? "${imageName.substring(0, 20)}...."
-                    : imageName;
+            text = imageName.length > 20
+              ? "${imageName.substring(0, 20)}...."
+              : imageName;
             btnColor = Colors.red;
           });
 

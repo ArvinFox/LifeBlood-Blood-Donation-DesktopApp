@@ -17,16 +17,7 @@ class _DonorsPageState extends State<DonorsPage> {
   final TextEditingController addressController = TextEditingController();
   String? selectedBloodType;
 
-  final List<String> bloodTypes = [
-    'A+',
-    'A-',
-    'B+',
-    'B-',
-    'AB+',
-    'AB-',
-    'O+',
-    'O-',
-  ];
+  final List<String> bloodTypes = ['A+','A-','B+','B-','AB+','AB-','O+','O-'];
   List<Map<String, String>> donors = [];
 
   @override
@@ -46,36 +37,19 @@ class _DonorsPageState extends State<DonorsPage> {
       }
 
       final snapshot = await query.get();
-      final filteredDocs =
-          snapshot.docs.where((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            final nameMatch =
-                nameController.text.isEmpty ||
-                data['fullName']?.toString().toLowerCase().contains(
-                      nameController.text.toLowerCase(),
-                    ) ==
-                    true;
-            final contactMatch =
-                contactController.text.isEmpty ||
-                data['contactNumber']?.toString().toLowerCase().contains(
-                      contactController.text.toLowerCase(),
-                    ) ==
-                    true;
-            final addressMatch =
-                addressController.text.isEmpty ||
-                data['address']?.toString().toLowerCase().contains(
-                      addressController.text.toLowerCase(),
-                    ) ==
-                    true;
-            return nameMatch && contactMatch && addressMatch;
-          }).toList();
+      final filteredDocs = snapshot.docs.where((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        final nameMatch = nameController.text.isEmpty || data['fullName']?.toString().toLowerCase().contains(nameController.text.toLowerCase()) == true;
+        final contactMatch =  contactController.text.isEmpty || data['contactNumber']?.toString().toLowerCase().contains(contactController.text.toLowerCase()) == true;
+        final addressMatch = addressController.text.isEmpty || data['address']?.toString().toLowerCase().contains(addressController.text.toLowerCase()) == true;
+        return nameMatch && contactMatch && addressMatch;
+      }).toList();
 
       setState(() {
         donors =
             filteredDocs.map((doc) {
               final data = doc.data() as Map<String, dynamic>;
               return {
-                'id': doc.id,
                 'fullName': (data['fullName'] ?? '').toString(),
                 'bloodType': (data['bloodType'] ?? '').toString(),
                 'contactNumber': (data['contactNumber'] ?? '').toString(),
@@ -145,27 +119,29 @@ class _DonorsPageState extends State<DonorsPage> {
             "Donor Details",
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children:
-                  donor.entries.map((entry) {
-                    final label = fieldLabels[entry.key] ?? entry.key;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: TextField(
-                        controller: TextEditingController(text: entry.value),
-                        decoration: InputDecoration(
-                          labelText: label,
-                          border: const OutlineInputBorder(),
-                          labelStyle: TextStyle(
-                            fontSize: 16,
-                          ), // Font size for dialog field labels
-                        ),
-                        readOnly: true,
+          content: Container(
+            width: 500,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: donor.entries.map((entry) {
+                  final label = fieldLabels[entry.key] ?? entry.key;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: TextField(
+                      controller: TextEditingController(text: entry.value),
+                      decoration: InputDecoration(
+                        labelText: label,
+                        border: const OutlineInputBorder(),
+                        labelStyle: TextStyle(
+                          fontSize: 16,
+                        ), // Font size for dialog field labels
                       ),
-                    );
-                  }).toList(),
+                      readOnly: true,
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
           ),
           actions: [
@@ -174,10 +150,7 @@ class _DonorsPageState extends State<DonorsPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 24,vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -261,12 +234,7 @@ class _DonorsPageState extends State<DonorsPage> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        backgroundColor: const Color.fromARGB(
-                          33,
-                          158,
-                          158,
-                          158,
-                        ),
+                        backgroundColor: const Color.fromARGB(33,158,158,158),
                         collapsedBackgroundColor: const Color(0xFFF5F5F5),
                         children: [
                           Padding(
@@ -299,8 +267,7 @@ class _DonorsPageState extends State<DonorsPage> {
                                         icon: Icons.phone,
                                         keyboardType: TextInputType.number,
                                         inputFormatters: [
-                                          FilteringTextInputFormatter
-                                              .digitsOnly,
+                                          FilteringTextInputFormatter.digitsOnly,
                                           LengthLimitingTextInputFormatter(10),
                                         ],
                                       ),
@@ -319,37 +286,27 @@ class _DonorsPageState extends State<DonorsPage> {
                                         value: selectedBloodType,
                                         decoration: InputDecoration(
                                           labelText: "Blood Type",
-                                          prefixIcon: const Icon(
-                                            Icons.bloodtype,
-                                          ),
+                                          prefixIcon: const Icon(Icons.bloodtype),
                                           filled: true,
                                           fillColor: Colors.white,
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                                horizontal: 16,
-                                                vertical: 14,
-                                              ),
+                                          contentPadding: const EdgeInsets.symmetric(horizontal: 16,vertical: 14),
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
+                                            borderRadius: BorderRadius.circular(12),
                                           ),
-                                          labelStyle: TextStyle(
-                                            fontSize: 16,
-                                          ), // Font size for label
+                                          labelStyle: TextStyle(fontSize: 16), // Font size for label
                                         ),
                                         items:
-                                            bloodTypes.map((type) {
-                                              return DropdownMenuItem(
-                                                value: type,
-                                                child: Text(
-                                                  type,
-                                                  style: TextStyle(
-                                                    fontSize: 16,
-                                                  ),
+                                          bloodTypes.map((type) {
+                                            return DropdownMenuItem(
+                                              value: type,
+                                              child: Text(
+                                                type,
+                                                style: TextStyle(
+                                                  fontSize: 16,
                                                 ),
-                                              );
-                                            }).toList(),
+                                              ),
+                                            );
+                                          }).toList(),
                                         onChanged: (value) {
                                           setState(() {
                                             selectedBloodType = value;
@@ -370,13 +327,9 @@ class _DonorsPageState extends State<DonorsPage> {
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: Colors.grey[400],
                                           foregroundColor: Colors.black,
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 14,
-                                          ),
+                                          padding: const EdgeInsets.symmetric(vertical: 14),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
+                                            borderRadius: BorderRadius.circular(12),
                                           ),
                                         ),
                                         icon: const Icon(Icons.refresh),
@@ -394,13 +347,9 @@ class _DonorsPageState extends State<DonorsPage> {
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: Colors.redAccent,
                                           foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 14,
-                                          ),
+                                          padding: const EdgeInsets.symmetric(vertical: 14),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
+                                            borderRadius: BorderRadius.circular(12),
                                           ),
                                         ),
                                         icon: const Icon(Icons.search),
@@ -429,7 +378,6 @@ class _DonorsPageState extends State<DonorsPage> {
                       else
                         DynamicTable(
                           columns: [
-                            'ID',
                             'Name',
                             'Blood Type',
                             'Contact',
@@ -437,33 +385,28 @@ class _DonorsPageState extends State<DonorsPage> {
                             'Action',
                           ],
                           rows:
-                              donors.map((donor) {
-                                return [
-                                  donor['id'],
-                                  donor['fullName'],
-                                  donor['bloodType'],
-                                  donor['contactNumber'],
-                                  donor['address'],
-                                  Center(
-                                    child: SizedBox(
-                                      width: 100,
-                                      child: ElevatedButton(
-                                        onPressed: () => showDonorPopup(donor),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(
-                                            0xFFFFAE42,
-                                          ),
-                                          foregroundColor: Colors.white,
-                                          textStyle: const TextStyle(
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                        child: const Text("Details"),
+                            donors.map((donor) {
+                              return [
+                                donor['fullName'],
+                                donor['bloodType'],
+                                donor['contactNumber'],
+                                donor['address'],
+                                Center(
+                                  child: SizedBox(
+                                    width: 100,
+                                    child: ElevatedButton(
+                                      onPressed: () => showDonorPopup(donor),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFFFFAE42),
+                                        foregroundColor: Colors.white,
+                                        textStyle: const TextStyle(fontSize: 16),
                                       ),
+                                      child: const Text("Details"),
                                     ),
                                   ),
-                                ];
-                              }).toList(),
+                                ),
+                              ];
+                            }).toList(),
                         ),
                     ],
                   ),
