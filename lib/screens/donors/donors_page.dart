@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:blood_donation_app/components/table.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 
 class DonorsPage extends StatefulWidget {
   const DonorsPage({super.key});
@@ -24,41 +27,89 @@ class _DonorsPageState extends State<DonorsPage> {
     'O+',
     'O-',
   ];
+  List<Map<String, String>> donors = [];
 
-  final List<Map<String, String>> donors = [
-    {
-      'id': '1',
-      'name': 'John Doe',
-      'bloodType': 'A+',
-      'contact': '0771234567',
-      'address': '123 Main Street, Colombo',
-      'city': 'Colombo',
-      'province': 'Western',
-      'email': 'john@example.com',
-      'dob': '1990-01-01',
-      'nic': '901234567V',
-      'gender': 'Male',
-      'health': 'Healthy',
-      'report': 'None',
-      'registeredDate': '2024-05-10',
-    },
-    {
-      'id': '2',
-      'name': 'Alice Smith',
-      'bloodType': 'B-',
-      'contact': '0787654321',
-      'address': '456 Beach Road, Galle',
-      'city': 'Galle',
-      'province': 'Southern',
-      'email': 'alice@example.com',
-      'dob': '1987-11-15',
-      'nic': '871234567V',
-      'gender': 'Female',
-      'health': 'Minor allergies',
-      'report': 'Allergy noted',
-      'registeredDate': '2023-10-20',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    fetchDonors();
+  }
+
+  Future<void> fetchDonors({bool applyFilters = false}) async {
+    try {
+      Query query = FirebaseFirestore.instance.collection('user');
+
+      if (applyFilters) {
+        if (selectedBloodType != null && selectedBloodType!.isNotEmpty) {
+          query = query.where('bloodType', isEqualTo: selectedBloodType);
+        }
+      }
+
+      final snapshot = await query.get();
+      final filteredDocs =
+          snapshot.docs.where((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            final nameMatch =
+                nameController.text.isEmpty ||
+                data['fullName']?.toString().toLowerCase().contains(
+                      nameController.text.toLowerCase(),
+                    ) ==
+                    true;
+            final contactMatch =
+                contactController.text.isEmpty ||
+                data['contactNumber']?.toString().toLowerCase().contains(
+                      contactController.text.toLowerCase(),
+                    ) ==
+                    true;
+            final addressMatch =
+                addressController.text.isEmpty ||
+                data['address']?.toString().toLowerCase().contains(
+                      addressController.text.toLowerCase(),
+                    ) ==
+                    true;
+            return nameMatch && contactMatch && addressMatch;
+          }).toList();
+
+      setState(() {
+        donors =
+            filteredDocs.map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              return {
+                'id': doc.id,
+                'fullName': (data['fullName'] ?? '').toString(),
+                'bloodType': (data['bloodType'] ?? '').toString(),
+                'contactNumber': (data['contactNumber'] ?? '').toString(),
+                'address': (data['address'] ?? '').toString(),
+                'city': (data['city'] ?? '').toString(),
+                'province': (data['province'] ?? '').toString(),
+                'email': (data['email'] ?? '').toString(),
+                'dob':
+                    data['dob'] != null && data['dob'] is Timestamp
+                        ? DateFormat(
+                          'yyyy-MM-dd',
+                        ).format((data['dob'] as Timestamp).toDate())
+                        : '',
+                'nic': (data['nic'] ?? '').toString(),
+                'gender': (data['gender'] ?? '').toString(),
+                'healthConditions': (data['healthConditions'] ?? '').toString(),
+                'created_at':
+                    data['created_at'] != null &&
+                            data['created_at'] is Timestamp
+                        ? DateFormat(
+                          'yyyy-MM-dd',
+                        ).format((data['created_at'] as Timestamp).toDate())
+                        : '',
+              };
+            }).toList();
+      });
+    } catch (e) {
+      print('Error filtering donors: $e');
+    }
+  }
+
+  void searchDonors() {
+    fetchDonors(applyFilters: true);
+  }
 
   void resetFilters() {
     nameController.clear();
@@ -67,39 +118,54 @@ class _DonorsPageState extends State<DonorsPage> {
     setState(() {
       selectedBloodType = null;
     });
-  }
-
-  void searchDonors() {
-    print('Searching with filters...');
+    fetchDonors();
   }
 
   void showDonorPopup(Map<String, String> donor) {
+    final fieldLabels = {
+      'fullName': 'Full Name',
+      'bloodType': 'Blood Type',
+      'contactNumber': 'Contact Number',
+      'address': 'Address',
+      'city': 'City',
+      'province': 'Province',
+      'email': 'Email',
+      'dob': 'Date of Birth',
+      'nic': 'NIC',
+      'gender': 'Gender',
+      'healthConditions': 'Health Conditions',
+      'created_at': 'Registered At',
+    };
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Donor Details"),
-          content: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.3,
-            child: SingleChildScrollView(
-              child: Column(
-                children:
-                    donor.entries.map((entry) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6),
-                        child: TextField(
-                          readOnly: true,
-                          decoration: InputDecoration(
-                            labelText: entry.key,
-                            border: const OutlineInputBorder(),
-                            filled: true,
-                            fillColor: Colors.grey[200],
-                          ),
-                          controller: TextEditingController(text: entry.value),
+          title: const Text(
+            "Donor Details",
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children:
+                  donor.entries.map((entry) {
+                    final label = fieldLabels[entry.key] ?? entry.key;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: TextField(
+                        controller: TextEditingController(text: entry.value),
+                        decoration: InputDecoration(
+                          labelText: label,
+                          border: const OutlineInputBorder(),
+                          labelStyle: TextStyle(
+                            fontSize: 16,
+                          ), // Font size for dialog field labels
                         ),
-                      );
-                    }).toList(),
-              ),
+                        readOnly: true,
+                      ),
+                    );
+                  }).toList(),
             ),
           ),
           actions: [
@@ -115,6 +181,7 @@ class _DonorsPageState extends State<DonorsPage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
+                  textStyle: const TextStyle(fontSize: 16),
                 ),
                 onPressed: () => Navigator.of(context).pop(),
                 child: const Text("Close"),
@@ -123,6 +190,39 @@ class _DonorsPageState extends State<DonorsPage> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildRoundedTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey, width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey, width: 2),
+        ),
+        labelStyle: TextStyle(fontSize: 16),
+      ),
     );
   }
 
@@ -138,7 +238,7 @@ class _DonorsPageState extends State<DonorsPage> {
               const Center(
                 child: Text(
                   'Donors',
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(height: 20),
@@ -148,70 +248,166 @@ class _DonorsPageState extends State<DonorsPage> {
                     children: [
                       ExpansionTile(
                         title: const Text(
-                          'Filter Options',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          'Search & Filter',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
+                            color: Colors.redAccent,
+                          ),
                         ),
+                        collapsedShape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        backgroundColor: const Color.fromARGB(
+                          33,
+                          158,
+                          158,
+                          158,
+                        ),
+                        collapsedBackgroundColor: const Color(0xFFF5F5F5),
                         children: [
                           Padding(
-                            padding: const EdgeInsets.all(16.0),
+                            padding: const EdgeInsets.all(20.0),
                             child: Column(
                               children: [
-                                TextField(
-                                  controller: nameController,
-                                  decoration: const InputDecoration(
-                                    labelText: "Name",
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                TextField(
-                                  controller: contactController,
-                                  decoration: const InputDecoration(
-                                    labelText: "Contact No",
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                TextField(
-                                  controller: addressController,
-                                  decoration: const InputDecoration(
-                                    labelText: "Address",
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                DropdownButtonFormField<String>(
-                                  value: selectedBloodType,
-                                  decoration: const InputDecoration(
-                                    labelText: "Blood Type",
-                                  ),
-                                  items:
-                                      bloodTypes.map((type) {
-                                        return DropdownMenuItem(
-                                          value: type,
-                                          child: Text(type),
-                                        );
-                                      }).toList(),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      selectedBloodType = value;
-                                    });
-                                  },
-                                ),
-                                const SizedBox(height: 16),
-                                Row(
+                                Wrap(
+                                  spacing: 16,
+                                  runSpacing: 16,
                                   children: [
-                                    Expanded(
-                                      child: ElevatedButton(
-                                        onPressed: resetFilters,
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.orangeAccent,
-                                        ),
-                                        child: const Text("Reset Filters"),
+                                    SizedBox(
+                                      width: 350,
+                                      child: _buildRoundedTextField(
+                                        controller: nameController,
+                                        label: "Name",
+                                        icon: Icons.person,
+                                        keyboardType: TextInputType.text,
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.allow(
+                                            RegExp(r'[a-zA-Z ]'),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: ElevatedButton(
+                                    SizedBox(
+                                      width: 350,
+                                      child: _buildRoundedTextField(
+                                        controller: contactController,
+                                        label: "Contact Number",
+                                        icon: Icons.phone,
+                                        keyboardType: TextInputType.number,
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter
+                                              .digitsOnly,
+                                          LengthLimitingTextInputFormatter(10),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 350,
+                                      child: _buildRoundedTextField(
+                                        controller: addressController,
+                                        label: "Address",
+                                        icon: Icons.home,
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 350,
+                                      child: DropdownButtonFormField<String>(
+                                        value: selectedBloodType,
+                                        decoration: InputDecoration(
+                                          labelText: "Blood Type",
+                                          prefixIcon: const Icon(
+                                            Icons.bloodtype,
+                                          ),
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 16,
+                                                vertical: 14,
+                                              ),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          labelStyle: TextStyle(
+                                            fontSize: 16,
+                                          ), // Font size for label
+                                        ),
+                                        items:
+                                            bloodTypes.map((type) {
+                                              return DropdownMenuItem(
+                                                value: type,
+                                                child: Text(
+                                                  type,
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                              );
+                                            }).toList(),
+                                        onChanged: (value) {
+                                          setState(() {
+                                            selectedBloodType = value;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 24),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 150,
+                                      child: ElevatedButton.icon(
+                                        onPressed: resetFilters,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.grey[400],
+                                          foregroundColor: Colors.black,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 14,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                        ),
+                                        icon: const Icon(Icons.refresh),
+                                        label: const Text(
+                                          "Reset",
+                                          style: TextStyle(fontSize: 16),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 20),
+                                    SizedBox(
+                                      width: 150,
+                                      child: ElevatedButton.icon(
                                         onPressed: searchDonors,
-                                        child: const Text("Search"),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.redAccent,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 14,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                        ),
+                                        icon: const Icon(Icons.search),
+                                        label: const Text(
+                                          "Search",
+                                          style: TextStyle(fontSize: 16),
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -222,41 +418,53 @@ class _DonorsPageState extends State<DonorsPage> {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      DynamicTable(
-                        columns: [
-                          'ID',
-                          'Name',
-                          'Blood Type',
-                          'Contact',
-                          'Address',
-                          'Action',
-                        ],
-                        rows:
-                            donors.map((donor) {
-                              return [
-                                donor['id'],
-                                donor['name'],
-                                donor['bloodType'],
-                                donor['contact'],
-                                donor['address'],
-                                Center(
-                                  child: SizedBox(
-                                    width: 100,
-                                    child: ElevatedButton(
-                                      onPressed: () => showDonorPopup(donor),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(
-                                          0xFFFFAE42,
+                      // Display message if no donors
+                      if (donors.isEmpty)
+                        Center(
+                          child: Text(
+                            'No donors available.',
+                            style: TextStyle(fontSize: 20, color: Colors.grey),
+                          ),
+                        )
+                      else
+                        DynamicTable(
+                          columns: [
+                            'ID',
+                            'Name',
+                            'Blood Type',
+                            'Contact',
+                            'Address',
+                            'Action',
+                          ],
+                          rows:
+                              donors.map((donor) {
+                                return [
+                                  donor['id'],
+                                  donor['fullName'],
+                                  donor['bloodType'],
+                                  donor['contactNumber'],
+                                  donor['address'],
+                                  Center(
+                                    child: SizedBox(
+                                      width: 100,
+                                      child: ElevatedButton(
+                                        onPressed: () => showDonorPopup(donor),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(
+                                            0xFFFFAE42,
+                                          ),
+                                          foregroundColor: Colors.white,
+                                          textStyle: const TextStyle(
+                                            fontSize: 16,
+                                          ),
                                         ),
-                                        foregroundColor: Colors.white,
+                                        child: const Text("Details"),
                                       ),
-                                      child: const Text("View"),
                                     ),
                                   ),
-                                ),
-                              ];
-                            }).toList(),
-                      ),
+                                ];
+                              }).toList(),
+                        ),
                     ],
                   ),
                 ),
