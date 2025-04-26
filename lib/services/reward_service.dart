@@ -8,7 +8,7 @@ class RewardService{
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   
   //create reward
-  Future<String> addReward(Rewards reward) async {
+  Future<String> addReward(Reward reward) async {
     final docRef = _firestore.collection('rewards').doc(); 
     final newRewardData = {
       'reward_name': reward.rewardName,

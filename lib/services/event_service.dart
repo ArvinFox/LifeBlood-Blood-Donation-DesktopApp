@@ -5,7 +5,7 @@ class EventService{
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   
   //create event
-  Future<String> addEvent(DonationEvents event) async {
+  Future<String> addEvent(DonationEvent event) async {
     final docRef = _firestore.collection('events').doc(); 
     final newEventData = {
       'event_name': event.eventName,

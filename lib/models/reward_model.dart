@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class Rewards {
+class Reward {
   final String? rewardId;
   final String rewardName;
   final String description;
@@ -8,7 +8,7 @@ class Rewards {
   final DateTime endDate;
   final DateTime createdAt;
 
-  Rewards({
+  Reward({
     this.rewardId,
     required this.rewardName,
     required this.description,

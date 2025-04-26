@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MedicalReport {
-  final String? id;
+  final String reportId;
   final String donorName;
   final String reportType;
   final String status;
@@ -9,7 +9,7 @@ class MedicalReport {
   final String filePath;
 
   MedicalReport({
-    this.id,
+    required this.reportId,
     required this.donorName,
     required this.reportType,
     required this.status,
@@ -19,8 +19,9 @@ class MedicalReport {
 
   factory MedicalReport.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+    
     return MedicalReport(
-      id: doc.id,
+      reportId: doc.id,
       donorName: data['donorName'] ?? '',
       reportType: data['reportType'] ?? '',
       status: data['status'] ?? 'Pending',

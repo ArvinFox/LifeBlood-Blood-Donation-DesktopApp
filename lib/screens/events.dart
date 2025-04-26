@@ -26,7 +26,7 @@ class _EventsScreenState extends State<EventsScreen> {
     final eventService = EventService();
 
     try{
-      final DonationEvents events = DonationEvents(
+      final DonationEvent event = DonationEvent(
         eventName: data['title'], 
         description: data['description'], 
         dateAndTime: Helpers.combineDateAndTime(data['eventDate'], data['eventTime']), 
@@ -34,7 +34,7 @@ class _EventsScreenState extends State<EventsScreen> {
         location: data['location'],
       );
 
-      final eventId = await eventService.addEvent(events);
+      final eventId = await eventService.addEvent(event);
 
       if(data['poster'] != null && data['poster'].toString().isNotEmpty){
         await uploadEventImage(context, data['poster'], eventId);
@@ -47,36 +47,30 @@ class _EventsScreenState extends State<EventsScreen> {
     }
   }
 
-  Future<String?> uploadEventImage(BuildContext context,String base64Image, String eventId) async {
+  Future<void> uploadEventImage(BuildContext context,String base64Image, String eventId) async {
     try {
       final imageBytes = base64Decode(base64Image);
 
       final imageName = 'event_image_$eventId.jpg';
       final imagePath = '$eventId/$imageName';
 
-      final response = await Supabase.instance.client.storage
-          .from('events')
-          .uploadBinary(
-            imagePath,
-            imageBytes,
-            fileOptions: const FileOptions(contentType: 'image/jpeg'), 
-          );
+      await Supabase.instance.client.storage
+        .from('events')
+        .uploadBinary(
+          imagePath,
+          imageBytes,
+          fileOptions: const FileOptions(contentType: 'image/jpeg'), 
+        );
 
-      if (response != null) {
-        final publicUrl = Supabase.instance.client.storage
-            .from('events')
-            .getPublicUrl(imagePath);
+      final publicUrl = Supabase.instance.client.storage
+        .from('events')
+        .getPublicUrl(imagePath);
 
-        Helpers.debugPrintWithBorder('Event image uploaded to: $publicUrl');
-        return publicUrl;
-      } else {
-        Helpers.showError(context, "Failed to upload event image.");
-        return null;
-      }
-    } catch (e) {
+      Helpers.debugPrintWithBorder('Event image uploaded to: $publicUrl');
+      
+        } catch (e) {
       Helpers.debugPrintWithBorder('Image upload error: $e');
       Helpers.showError(context, "Error uploading event image.");
-      return null;
     }
   }
 
@@ -364,7 +358,7 @@ class _EventsScreenState extends State<EventsScreen> {
                       context: context,
                       builder: (_) => AddData(
                         formType: FormType.events,
-                        onSubmit: (data) async{
+                        onSubmit: (data) async {
                           await createEvent(context, data);
                         },
                       ),

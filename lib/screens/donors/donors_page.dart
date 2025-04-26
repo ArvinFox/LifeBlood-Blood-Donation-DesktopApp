@@ -66,12 +66,12 @@ class _DonorsPageState extends State<DonorsPage> {
                 'nic': (data['nic'] ?? '').toString(),
                 'gender': (data['gender'] ?? '').toString(),
                 'healthConditions': (data['healthConditions'] ?? '').toString(),
-                'created_at':
-                    data['created_at'] != null &&
-                            data['created_at'] is Timestamp
+                'createdAt':
+                    data['createdAt'] != null &&
+                            data['createdAt'] is Timestamp
                         ? DateFormat(
                           'yyyy-MM-dd',
-                        ).format((data['created_at'] as Timestamp).toDate())
+                        ).format((data['createdAt'] as Timestamp).toDate())
                         : '',
               };
             }).toList();
@@ -108,59 +108,122 @@ class _DonorsPageState extends State<DonorsPage> {
       'nic': 'NIC',
       'gender': 'Gender',
       'healthConditions': 'Health Conditions',
-      'created_at': 'Registered At',
+      'createdAt': 'Registered At',
     };
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text(
-            "Donor Details",
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
+          backgroundColor: const Color.fromARGB(255, 255, 247, 247),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          elevation: 16,
           content: Container(
             width: 500,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+              border: Border.all(color: Colors.redAccent, width: 1),
+            ),
             child: SingleChildScrollView(
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: donor.entries.map((entry) {
-                  final label = fieldLabels[entry.key] ?? entry.key;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: TextField(
-                      controller: TextEditingController(text: entry.value),
-                      decoration: InputDecoration(
-                        labelText: label,
-                        border: const OutlineInputBorder(),
-                        labelStyle: TextStyle(
-                          fontSize: 16,
-                        ), // Font size for dialog field labels
-                      ),
-                      readOnly: true,
+                children: [
+                  const Text(
+                    "Donor Details",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.redAccent,
                     ),
-                  );
-                }).toList(),
+                  ),
+                  const SizedBox(height: 20),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: donor.entries.map((entry) {
+                      final label = fieldLabels[entry.key] ?? entry.key;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              label,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade200,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: SelectableText(
+                                      entry.value.isNotEmpty ? entry.value : "-",
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.copy, size: 20, color: Colors.grey),
+                                    onPressed: () {
+                                      Clipboard.setData(ClipboardData(text: entry.value));
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('${label} copied to clipboard!'),
+                                          duration: const Duration(seconds: 1),
+                                        ),
+                                      );
+                                    },
+                                    tooltip: 'Copy',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+                  Center(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        textStyle: const TextStyle(fontSize: 16),
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text("Close"),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          actions: [
-            Center(
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24,vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  textStyle: const TextStyle(fontSize: 16),
-                ),
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text("Close"),
-              ),
-            ),
-          ],
         );
       },
     );

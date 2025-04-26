@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class DonationEvents {
+class DonationEvent {
   final String? eventId;
   final String eventName;
   final String description;
@@ -8,7 +8,7 @@ class DonationEvents {
   final DateTime createdAt;
   final String location;
 
-  DonationEvents({
+  DonationEvent({
     this.eventId,
     required this.eventName,
     required this.description,

@@ -32,7 +32,7 @@ class _RewardscreenState extends State<Rewardscreen> {
   Future<void> createReward(BuildContext context,Map<String, dynamic> data) async {
     try {
       final dateFormat = DateFormat('d-M-yyyy');
-      final Rewards reward = Rewards(
+      final Reward reward = Reward(
         rewardName: data['title'],
         description: data['description'],
         startDate: dateFormat.parse(data['startDate']),
@@ -52,34 +52,28 @@ class _RewardscreenState extends State<Rewardscreen> {
     }
   }
 
-  Future<String?> uploadRewardImage(BuildContext context,String base64Image,String rewardId) async {
+  Future<void> uploadRewardImage(BuildContext context, String base64Image, String rewardId) async {
     try {
       final imageBytes = base64Decode(base64Image);
       final imageName = 'reward_image_$rewardId.jpg';
       final imagePath = '$rewardId/$imageName';
 
-      final response = await Supabase.instance.client.storage
-          .from('rewards')
-          .uploadBinary(
-            imagePath,
-            imageBytes,
-            fileOptions: const FileOptions(contentType: 'image/jpeg'),
-          );
+      await Supabase.instance.client.storage
+        .from('rewards')
+        .uploadBinary(
+          imagePath,
+          imageBytes,
+          fileOptions: const FileOptions(contentType: 'image/jpeg'),
+        );
 
-      if (response != null) {
-        final publicUrl = Supabase.instance.client.storage
-            .from('rewards')
-            .getPublicUrl(imagePath);
-        Helpers.debugPrintWithBorder('Reward image uploaded to: $publicUrl');
-        return publicUrl;
-      } else {
-        Helpers.showError(context, "Failed to upload reward image.");
-        return null;
-      }
-    } catch (e) {
+      final publicUrl = Supabase.instance.client.storage
+        .from('rewards')
+        .getPublicUrl(imagePath);
+
+      Helpers.debugPrintWithBorder('Reward image uploaded to: $publicUrl');
+        } catch (e) {
       Helpers.debugPrintWithBorder('Image upload error: $e');
       Helpers.showError(context, "Error uploading reward image.");
-      return null;
     }
   }
 
@@ -111,7 +105,7 @@ class _RewardscreenState extends State<Rewardscreen> {
 
       setState(() {
         rewards = filtered.map((doc) {
-          final docData = doc.data() as Map<String, dynamic>;
+          final docData = doc.data();
           return {
             'id': doc.id,
             'reward_name': (docData['reward_name'] ?? '').toString(),
@@ -177,7 +171,8 @@ class _RewardscreenState extends State<Rewardscreen> {
                   'start_date': DateFormat('d-M-yyyy').parse(startDateController.text),
                   'end_date': DateFormat('d-M-yyyy').parse(endDateController.text),
                 };
-                rewardService.updateReward(docId, updatedData);
+
+                await rewardService.updateReward(docId, updatedData);
                 Navigator.of(context).pop();
                 Helpers.showSucess(context, 'Reward updated successfully');
               } catch (e) {

@@ -76,7 +76,7 @@ class DashboardService {
 
   Future<void> createEvent(BuildContext context, Map<String,dynamic> data) async{
     try{
-      final DonationEvents events = DonationEvents(
+      final DonationEvent events = DonationEvent(
         eventName: data['title'], 
         description: data['description'], 
         dateAndTime: Helpers.combineDateAndTime(data['eventDate'], data['eventTime']), 
@@ -97,43 +97,37 @@ class DashboardService {
     }
   }
 
-  Future<String?> uploadEventImage(BuildContext context,String base64Image, String eventId) async {
+  Future<void> uploadEventImage(BuildContext context,String base64Image, String eventId) async {
     try {
       final imageBytes = base64Decode(base64Image);
 
       final imageName = 'event_image_$eventId.jpg';
       final imagePath = '$eventId/$imageName';
 
-      final response = await Supabase.instance.client.storage
-          .from('events')
-          .uploadBinary(
-            imagePath,
-            imageBytes,
-            fileOptions: const FileOptions(contentType: 'image/jpeg'), 
-          );
+      await Supabase.instance.client.storage
+        .from('events')
+        .uploadBinary(
+          imagePath,
+          imageBytes,
+          fileOptions: const FileOptions(contentType: 'image/jpeg'), 
+        );
 
-      if (response != null) {
-        final publicUrl = Supabase.instance.client.storage
-            .from('events')
-            .getPublicUrl(imagePath);
+      final publicUrl = Supabase.instance.client.storage
+        .from('events')
+        .getPublicUrl(imagePath);
 
-        Helpers.debugPrintWithBorder('Event image uploaded to: $publicUrl');
-        return publicUrl;
-      } else {
-        Helpers.showError(context, "Failed to upload event image.");
-        return null;
-      }
-    } catch (e) {
+      Helpers.debugPrintWithBorder('Event image uploaded to: $publicUrl');
+
+        } catch (e) {
       Helpers.debugPrintWithBorder('Image upload error: $e');
       Helpers.showError(context, "Error uploading event image.");
-      return null;
     }
   }
 
   Future<void> createReward(BuildContext context,Map<String, dynamic> data) async {
     try {
       final dateFormat = DateFormat('d-M-yyyy');
-      final Rewards reward = Rewards(
+      final Reward reward = Reward(
         rewardName: data['title'],
         description: data['description'],
         startDate: dateFormat.parse(data['startDate']),
@@ -153,34 +147,29 @@ class DashboardService {
     }
   }
 
-  Future<String?> uploadRewardImage(BuildContext context,String base64Image,String rewardId) async {
+  Future<void> uploadRewardImage(BuildContext context,String base64Image,String rewardId) async {
     try {
       final imageBytes = base64Decode(base64Image);
       final imageName = 'reward_image_$rewardId.jpg';
       final imagePath = '$rewardId/$imageName';
 
-      final response = await Supabase.instance.client.storage
-          .from('rewards')
-          .uploadBinary(
-            imagePath,
-            imageBytes,
-            fileOptions: const FileOptions(contentType: 'image/jpeg'),
-          );
+      await Supabase.instance.client.storage
+        .from('rewards')
+        .uploadBinary(
+          imagePath,
+          imageBytes,
+          fileOptions: const FileOptions(contentType: 'image/jpeg'),
+        );
 
-      if (response != null) {
-        final publicUrl = Supabase.instance.client.storage
-            .from('rewards')
-            .getPublicUrl(imagePath);
-        Helpers.debugPrintWithBorder('Reward image uploaded to: $publicUrl');
-        return publicUrl;
-      } else {
-        Helpers.showError(context, "Failed to upload reward image.");
-        return null;
-      }
-    } catch (e) {
+      final publicUrl = Supabase.instance.client.storage
+        .from('rewards')
+        .getPublicUrl(imagePath);
+        
+      Helpers.debugPrintWithBorder('Reward image uploaded to: $publicUrl');
+
+        } catch (e) {
       Helpers.debugPrintWithBorder('Image upload error: $e');
       Helpers.showError(context, "Error uploading reward image.");
-      return null;
     }
   }
 }

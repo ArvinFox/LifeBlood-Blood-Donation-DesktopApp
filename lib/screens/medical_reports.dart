@@ -1,75 +1,10 @@
+import 'package:blood_donation_app/models/medical_report_model.dart';
+import 'package:blood_donation_app/services/medical_report_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:file_saver/file_saver.dart';
 import 'package:open_filex/open_filex.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'dart:typed_data';
 import 'dart:ui'; 
-
-class MedicalReport {
-  final String? id;
-  final String donorName;
-  final String reportType;
-  final String status;
-  final DateTime date;
-  final String filePath;
-
-  MedicalReport({
-    this.id,
-    required this.donorName,
-    required this.reportType,
-    required this.status,
-    required this.date,
-    required this.filePath,
-  });
-
-  factory MedicalReport.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return MedicalReport(
-      id: doc.id,
-      donorName: data['donorName'] ?? '',
-      reportType: data['reportType'] ?? '',
-      status: data['status'] ?? 'Pending',
-      date: (data['date'] as Timestamp).toDate(),
-      filePath: data['filePath'] ?? '',
-    );
-  }
-}
-
-class SupabaseService {
-  final SupabaseClient _supabase = Supabase.instance.client;
-
-  Future<Uint8List> downloadFile(String filePath) async {
-    try {
-      return await _supabase.storage
-          .from('medical-reports')
-          .download(filePath);
-    } on StorageException catch (e) {
-      throw Exception('Download error: ${e.message}');
-    }
-  }
-}
-
-class MedicalReportService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  Stream<List<MedicalReport>> getReports() {
-    return _firestore
-        .collection('medical_reports')
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => MedicalReport.fromFirestore(doc))
-            .toList());
-  }
-
-  Future<void> updateReportStatus(String reportId, String newStatus) async {
-    await _firestore
-        .collection('medical_reports')
-        .doc(reportId)
-        .update({'status': newStatus});
-  }
-}
 
 class MedicalReportsPage extends StatefulWidget {
   const MedicalReportsPage({super.key});
@@ -82,16 +17,22 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
   final TextEditingController reportIdController = TextEditingController();
   final TextEditingController donorNameController = TextEditingController();
   final TextEditingController dateController = TextEditingController();
-  String? selectedStatus;
+  final MedicalReportService _reportService = MedicalReportService();
 
+  final List<String> statuses = ['Pending', 'Approved', 'Rejected'];
+  String? selectedStatus;
   String filterReportId = '';
   String filterDonorName = '';
   String? filterStatus;
   String filterDate = '';
 
-  final List<String> statuses = ['Pending', 'Approved', 'Rejected'];
-  final MedicalReportService _reportService = MedicalReportService();
-  final SupabaseService _supabaseService = SupabaseService();
+  @override
+  void dispose() {
+    reportIdController.dispose();
+    donorNameController.dispose();
+    dateController.dispose();
+    super.dispose();
+  }
 
   Future<void> _selectDate(BuildContext context) async {
     DateTime? initialDate = DateTime.now();
@@ -123,7 +64,6 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
         );
       },
     );
-
 
     if (picked != null) {
       setState(() {
@@ -175,8 +115,8 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
         const SnackBar(content: Text('Downloading report...')),
       );
 
-      final String fullFilePath = '${report.id}/${report.filePath}';
-      final fileBytes = await _supabaseService.downloadFile(fullFilePath);
+      final String fullFilePath = '${report.reportId}/${report.filePath}';
+      final fileBytes = await _reportService.downloadFile(fullFilePath);
       final fileName = report.filePath.split('/').last;
 
       final path = await FileSaver.instance.saveFile(
@@ -185,9 +125,7 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
         ext: fileName.split('.').last,
       );
 
-      if (path != null) {
-        await OpenFilex.open(path);
-      }
+      await OpenFilex.open(path);
 
       scaffoldMessenger.hideCurrentSnackBar();
     } catch (e) {
@@ -195,46 +133,6 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
         SnackBar(content: Text('Error: ${e.toString()}')),
       );
     }
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return Colors.orange;
-      case 'approved':
-        return Colors.green;
-      case 'rejected':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  Widget _buildInfoRow(String title, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              title,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -250,6 +148,7 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
+              
               ExpansionTile(
                 title: const Text(
                   'Filter Options',
@@ -329,6 +228,7 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
                 ],
               ),
               const SizedBox(height: 16),
+
               Expanded(
                 child: StreamBuilder<List<MedicalReport>>(
                   stream: _reportService.getReports(),
@@ -343,7 +243,7 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
                     final allReports = snapshot.data ?? [];
                     final filteredReports = allReports.where((report) {
                       bool matchesId = filterReportId.isEmpty ||
-                          (report.id ?? '').toLowerCase().contains(filterReportId.toLowerCase());
+                          (report.reportId).toLowerCase().contains(filterReportId.toLowerCase());
                       bool matchesName = filterDonorName.isEmpty ||
                           report.donorName.toLowerCase().contains(filterDonorName.toLowerCase());
                       bool matchesStatus = filterStatus == null || report.status == filterStatus;
@@ -373,7 +273,7 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      "Report ID: ${report.id}",
+                                      "Report ID: ${report.reportId}",
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
@@ -423,7 +323,7 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
                                         onPressed: isApproved
                                             ? null
                                             : () => _reportService.updateReportStatus(
-                                                report.id!, 'Approved'),
+                                                report.reportId, 'Approved'),
                                         child: const Text("Approve"),
                                       ),
                                     ),
@@ -439,7 +339,7 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
                                         onPressed: isRejected
                                             ? null
                                             : () => _reportService.updateReportStatus(
-                                                report.id!, 'Rejected'),
+                                                report.reportId, 'Rejected'),
                                         child: const Text("Reject"),
                                       ),
                                     ),
@@ -459,5 +359,45 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildInfoRow(String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              title,
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return Colors.orange;
+      case 'approved':
+        return Colors.green;
+      case 'rejected':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 }
