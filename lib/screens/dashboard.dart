@@ -1,3 +1,4 @@
+import 'package:blood_donation_app/components/add_data.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../services/dashboard_service.dart';
@@ -154,12 +155,32 @@ class _DashboardPageState extends State<DashboardPage> {
                             _modernButton(
                               'Add Event',
                               Icons.event,
-                              () => Navigator.pushNamed(context, '/events'),
+                              (){
+                                showDialog(
+                                  context: context,
+                                  builder:(_) => AddData(
+                                    formType: FormType.events,
+                                    onSubmit: (data) async {
+                                      await dashboardService.createEvent(context, data);
+                                    },
+                                  ),
+                                );
+                              }
                             ),
                             _modernButton(
-                              'Manage Rewards',
+                              'Add Reward',
                               Icons.card_giftcard,
-                              () => Navigator.pushNamed(context, '/rewards'),
+                              (){
+                                showDialog(
+                                  context: context,
+                                  builder:(_) => AddData(
+                                    formType: FormType.rewards,
+                                    onSubmit: (data) async {
+                                      await dashboardService.createReward(context, data);
+                                    },
+                                  ),
+                                );
+                              }
                             ),
                           ],
                         ),
@@ -297,45 +318,52 @@ class _DashboardPageState extends State<DashboardPage> {
     IconData icon,
     Color color,
   ) {
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: color.withOpacity(0.15),
-              radius: 28,
-              child: Icon(icon, color: color, size: 28),
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        bool isSmallScreen = constraints.maxWidth < 600;
+
+        return Card(
+          elevation: 3,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: EdgeInsets.all(isSmallScreen ? 12 : 18),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  backgroundColor: color.withOpacity(0.15),
+                  radius: isSmallScreen ? 20 : 28,
+                  child: Icon(icon, color: color, size: isSmallScreen ? 20 : 28),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: isSmallScreen ? 14 : 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: isSmallScreen ? 30 : 55),
+                      Text(
+                        value,
+                        style: TextStyle(
+                          fontSize: isSmallScreen ? 18 : 24,
+                          fontWeight: FontWeight.bold,
+                          color: color,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 55),
-                  Text(
-                    value,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

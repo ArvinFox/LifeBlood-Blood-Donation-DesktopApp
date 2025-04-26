@@ -338,8 +338,10 @@ class _RewardscreenState extends State<Rewardscreen> {
                             reward['description'],
                             formattedStartDate,
                             formattedEndDate,
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              alignment: WrapAlignment.center,
                               children: [
                                 ElevatedButton(
                                   onPressed: () {
