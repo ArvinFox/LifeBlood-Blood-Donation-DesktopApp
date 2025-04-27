@@ -24,9 +24,26 @@ class EventService{
     return docRef.id;
   }
 
-  //update event
-  Future<void> updateEvent(String eventId,Map<String, dynamic> updatedData) async{
-    await FirebaseFirestore.instance.collection('events').doc(eventId).update(updatedData);
+  // Get event by ID
+  Future<DonationEvent?> getEventById(String eventId) async {
+    try {
+      DocumentSnapshot eventDoc = await _firestore.collection("events").doc(eventId).get();
+      if (!eventDoc.exists) return null;
+
+      return DonationEvent.fromFirestore(eventDoc);
+      
+    } catch (e) {
+      throw Exception("Failed to get event by id: $e");
+    }
+  }
+
+  // Update event
+  Future<void> updateEvent(DonationEvent event) async {
+    try {
+      await _firestore.collection('events').doc(event.eventId).update(event.toFirestore());
+    } catch (e) {
+      throw Exception("Failed to update event: $e");
+    }
   }
 
    //delete event

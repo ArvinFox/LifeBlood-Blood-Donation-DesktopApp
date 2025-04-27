@@ -1,3 +1,4 @@
+import 'package:blood_donation_app/components/search_and_filter.dart';
 import 'package:blood_donation_app/models/medical_report_model.dart';
 import 'package:blood_donation_app/services/medical_report_service.dart';
 import 'package:flutter/material.dart';
@@ -146,180 +147,21 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
 
   @override
   Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: Colors.white,
-    body: SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            const Text(
-              'Medical Reports',
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            ExpansionTile(
-              title: const Text(
-                'Search & Filter',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 22,
-                  color: Colors.redAccent,
-                ),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            children: [
+              const Text(
+                'Medical Reports',
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
               ),
-              collapsedShape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              backgroundColor: const Color.fromARGB(33, 158, 158, 158),
-              collapsedBackgroundColor: const Color(0xFFF5F5F5),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    children: [
-                      Wrap(
-                        spacing: 16,
-                        runSpacing: 16,
-                        children: [
-                          SizedBox(
-                            width: 350,
-                            child: _buildRoundedTextField(
-                              controller: reportIdController,
-                              label: "Report ID",
-                              icon: Icons.assignment,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                RegExp(r'[a-zA-Z0-9]'),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(
-                            width: 350,
-                            child: _buildRoundedTextField(
-                              controller: donorNameController,
-                              label: "Donor Name",
-                              icon: Icons.person,
-                              keyboardType: TextInputType.text,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                RegExp(r'[a-zA-Z ]'),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(
-                            width: 350,
-                            child: DropdownButtonFormField<String>(
-                              value: selectedStatus,
-                              decoration: InputDecoration(
-                                labelText: "Status",
-                                prefixIcon: const Icon(Icons.flag),
-                                filled: true,
-                                fillColor: Colors.white,
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 14),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                labelStyle: const TextStyle(fontSize: 16),
-                              ),
-                              items: statuses.map((status) {
-                                return DropdownMenuItem(
-                                  value: status,
-                                  child: Text(
-                                    status,
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                setState(() {
-                                  selectedStatus = value;
-                                });
-                              },
-                            ),
-                          ),
-                          SizedBox(
-                            width: 350,
-                            child: GestureDetector(
-                              onTap: () => _selectDate(context),
-                              child: AbsorbPointer(
-                                child: TextFormField(
-                                  controller: dateController,
-                                  decoration: InputDecoration(
-                                    labelText: "Date (YYYY-MM-DD)",
-                                    prefixIcon: const Icon(Icons.calendar_today),
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 14),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    labelStyle: const TextStyle(fontSize: 16),
-                                  ),
-                                  readOnly: true,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 150,
-                            child: ElevatedButton.icon(
-                              onPressed: resetFilters,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.grey[400],
-                                foregroundColor: Colors.black,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              icon: const Icon(Icons.refresh),
-                              label: const Text(
-                                "Reset",
-                                style: TextStyle(fontSize: 16),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 20),
-                          SizedBox(
-                            width: 150,
-                            child: ElevatedButton.icon(
-                              onPressed: searchReports,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.redAccent,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              icon: const Icon(Icons.search),
-                              label: const Text(
-                                "Search",
-                                style: TextStyle(fontSize: 16),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
+
+              _buildSearchAndFilter(),
+              const SizedBox(height: 20),
 
               Expanded(
                 child: StreamBuilder<List<MedicalReport>>(
@@ -467,28 +309,63 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
     );
   }
 
-  Widget _buildRoundedTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    List<TextInputFormatter>? inputFormatters,
-    TextInputType? keyboardType,
-  }) {
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon),
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+  Widget _buildSearchAndFilter() {
+    return SearchAndFilter(
+      title: "Search & Filter",
+      searchFields: [
+        buildRoundedTextField(
+          controller: reportIdController,
+          label: "Report ID",
+          icon: Icons.assignment,
+          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]'))],
         ),
-        labelStyle: const TextStyle(fontSize: 16),
-      ),
-      inputFormatters: inputFormatters,
-      keyboardType: keyboardType,
+        buildRoundedTextField(
+          controller: donorNameController,
+          label: "Donor Name",
+          icon: Icons.person,
+          keyboardType: TextInputType.text,
+          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]'))],
+        ),
+        SizedBox(
+          width: 350,
+          child: DropdownButtonFormField<String>(
+            value: selectedStatus,
+            decoration: InputDecoration(
+              labelText: "Status",
+              prefixIcon: Icon(Icons.flag),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              labelStyle: TextStyle(fontSize: 16),
+            ),
+            items: statuses.map((status) {
+              return DropdownMenuItem(
+                value: status,
+                child: Text(status, style: const TextStyle(fontSize: 16)),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                selectedStatus = value;
+              });
+            },
+          ),
+        ),
+        GestureDetector(
+          onTap: () => _selectDate(context),
+          child: AbsorbPointer(
+            child: buildRoundedTextField(
+              controller: dateController,
+              label: "Date (YYYY-MM-DD)",
+              icon: Icons.calendar_today,
+              readOnly: true,
+            ),
+          ),
+        ),
+      ],
+      onSearch: searchReports,
+      onReset: resetFilters,
     );
   }
 

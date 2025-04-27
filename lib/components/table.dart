@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 
 class DynamicTable extends StatelessWidget {
   final List<String> columns;
-  final List<List<dynamic>> rows; // Change from List<List<String>> to List<List<dynamic>>
+  final List<List<dynamic>> rows;
 
   const DynamicTable({
-    Key? key,
+    super.key,
     required this.columns,
     required this.rows,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

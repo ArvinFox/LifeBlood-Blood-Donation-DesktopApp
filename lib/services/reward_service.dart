@@ -24,6 +24,28 @@ class RewardService{
     return docRef.id;
   }
 
+  // Get reward by ID
+  Future<Reward?> getRewardById(String rewardId) async {
+    try {
+      DocumentSnapshot rewardDoc = await _firestore.collection("rewards").doc(rewardId).get();
+      if (!rewardDoc.exists) return null;
+
+      return Reward.fromFirestore(rewardDoc);
+      
+    } catch (e) {
+      throw Exception("Failed to get reward by id: $e");
+    }
+  }
+
+  // Update reward
+  Future<void> updateReward(Reward reward) async {
+    try {
+      await _firestore.collection('rewards').doc(reward.rewardId).update(reward.toFirestore());
+    } catch (e) {
+      throw Exception("Failed to update reward: $e");
+    }
+  }
+
   //delete reward
   Future<void> deleteReward(BuildContext context, String docId) async {
     try {
@@ -53,10 +75,5 @@ class RewardService{
     } catch (e) {
       print('Error deleting image from Supabase Storage: $e');
     }
-  }
-
-  //update reward
-  Future<void> updateReward(String rewardId,Map<String, dynamic> updatedData) async{
-    await FirebaseFirestore.instance.collection('rewards').doc(rewardId).update(updatedData);
   }
 }

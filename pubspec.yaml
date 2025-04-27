@@ -22,6 +22,12 @@ dependencies:
   # File picker (for selecting images, documents, etc.)
   file_picker: ^9.0.2
 
+  # Open files
+  open_filex: ^4.7.0
+
+  # File saver (for downloading files)
+  file_saver: ^0.2.14
+
   # Date and time formatting
   intl: ^0.20.2
 
@@ -40,8 +46,6 @@ dependencies:
 
   # Calendar UI
   table_calendar: ^3.2.0
-  open_filex: ^4.7.0
-  file_saver: ^0.2.14
 
 # -----------------------------------------------------------------------
 # Development Dependencies: Linting and Testing

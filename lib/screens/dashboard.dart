@@ -1,4 +1,4 @@
-import 'package:blood_donation_app/components/add_data.dart';
+import 'package:blood_donation_app/components/manage_data_form.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../services/dashboard_service.dart';
@@ -158,9 +158,9 @@ class _DashboardPageState extends State<DashboardPage> {
                               (){
                                 showDialog(
                                   context: context,
-                                  builder:(_) => AddData(
+                                  builder:(_) => ManageDataForm(
                                     formType: FormType.events,
-                                    onSubmit: (data) async {
+                                    onSubmit: (data, isEdit) async {
                                       await dashboardService.createEvent(context, data);
                                     },
                                   ),
@@ -173,9 +173,9 @@ class _DashboardPageState extends State<DashboardPage> {
                               (){
                                 showDialog(
                                   context: context,
-                                  builder:(_) => AddData(
+                                  builder:(_) => ManageDataForm(
                                     formType: FormType.rewards,
-                                    onSubmit: (data) async {
+                                    onSubmit: (data, isEdit) async {
                                       await dashboardService.createReward(context, data);
                                     },
                                   ),

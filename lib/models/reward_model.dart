@@ -1,12 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Reward {
-  final String? rewardId;
+  String? rewardId;
   final String rewardName;
   final String description;
   final DateTime startDate;
   final DateTime endDate;
-  final DateTime createdAt;
+  DateTime? createdAt;
+  DateTime? updatedAt;
 
   Reward({
     this.rewardId,
@@ -14,8 +15,23 @@ class Reward {
     required this.description,
     required this.startDate,
     required this.endDate,
-    required this.createdAt,
+    this.createdAt,
+    this.updatedAt,
   });
+
+  factory Reward.fromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+    return Reward(
+      rewardId: doc.id,
+      rewardName: data['reward_name'] ?? '', 
+      description: data['description'] ?? '', 
+      startDate: (data['start_date'] as Timestamp).toDate(), 
+      endDate: (data['end_date'] as Timestamp).toDate(), 
+      createdAt: data['created_at'] != null ? (data['created_at'] as Timestamp).toDate() : null, 
+      updatedAt: data['updated_at'] != null ? (data['updated_at'] as Timestamp).toDate() : null, 
+    );
+  }
 
   Map<String, dynamic> toFirestore() {
     return {
@@ -23,7 +39,8 @@ class Reward {
       'description': description,
       'start_date': Timestamp.fromDate(startDate),
       'end_date': Timestamp.fromDate(endDate),
-      'created_at': DateTime.now()
+      'created_at': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
+      'updated_at': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
     };
   }
 }

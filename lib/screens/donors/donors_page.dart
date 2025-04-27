@@ -1,3 +1,4 @@
+import 'package:blood_donation_app/components/search_and_filter.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:blood_donation_app/components/table.dart';
@@ -189,7 +190,7 @@ class _DonorsPageState extends State<DonorsPage> {
                                       Clipboard.setData(ClipboardData(text: entry.value));
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
-                                          content: Text('${label} copied to clipboard!'),
+                                          content: Text('$label copied to clipboard!'),
                                           duration: const Duration(seconds: 1),
                                         ),
                                       );
@@ -229,39 +230,6 @@ class _DonorsPageState extends State<DonorsPage> {
     );
   }
 
-  Widget _buildRoundedTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    TextInputType? keyboardType,
-    List<TextInputFormatter>? inputFormatters,
-  }) {
-    return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      inputFormatters: inputFormatters,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey, width: 1),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey, width: 2),
-        ),
-        labelStyle: TextStyle(fontSize: 16),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -278,159 +246,14 @@ class _DonorsPageState extends State<DonorsPage> {
                 ),
               ),
               const SizedBox(height: 20),
+
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      ExpansionTile(
-                        title: const Text(
-                          'Search & Filter',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 22,
-                            color: Colors.redAccent,
-                          ),
-                        ),
-                        collapsedShape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        backgroundColor: const Color.fromARGB(33,158,158,158),
-                        collapsedBackgroundColor: const Color(0xFFF5F5F5),
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: Column(
-                              children: [
-                                Wrap(
-                                  spacing: 16,
-                                  runSpacing: 16,
-                                  children: [
-                                    SizedBox(
-                                      width: 350,
-                                      child: _buildRoundedTextField(
-                                        controller: nameController,
-                                        label: "Name",
-                                        icon: Icons.person,
-                                        keyboardType: TextInputType.text,
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter.allow(
-                                            RegExp(r'[a-zA-Z ]'),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: 350,
-                                      child: _buildRoundedTextField(
-                                        controller: contactController,
-                                        label: "Contact Number",
-                                        icon: Icons.phone,
-                                        keyboardType: TextInputType.number,
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter.digitsOnly,
-                                          LengthLimitingTextInputFormatter(10),
-                                        ],
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: 350,
-                                      child: _buildRoundedTextField(
-                                        controller: addressController,
-                                        label: "Address",
-                                        icon: Icons.home,
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: 350,
-                                      child: DropdownButtonFormField<String>(
-                                        value: selectedBloodType,
-                                        decoration: InputDecoration(
-                                          labelText: "Blood Type",
-                                          prefixIcon: const Icon(Icons.bloodtype),
-                                          filled: true,
-                                          fillColor: Colors.white,
-                                          contentPadding: const EdgeInsets.symmetric(horizontal: 16,vertical: 14),
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          labelStyle: TextStyle(fontSize: 16), // Font size for label
-                                        ),
-                                        items:
-                                          bloodTypes.map((type) {
-                                            return DropdownMenuItem(
-                                              value: type,
-                                              child: Text(
-                                                type,
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                            );
-                                          }).toList(),
-                                        onChanged: (value) {
-                                          setState(() {
-                                            selectedBloodType = value;
-                                          });
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 24),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    SizedBox(
-                                      width: 150,
-                                      child: ElevatedButton.icon(
-                                        onPressed: resetFilters,
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.grey[400],
-                                          foregroundColor: Colors.black,
-                                          padding: const EdgeInsets.symmetric(vertical: 14),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                        icon: const Icon(Icons.refresh),
-                                        label: const Text(
-                                          "Reset",
-                                          style: TextStyle(fontSize: 16),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 20),
-                                    SizedBox(
-                                      width: 150,
-                                      child: ElevatedButton.icon(
-                                        onPressed: searchDonors,
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.redAccent,
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(vertical: 14),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                        icon: const Icon(Icons.search),
-                                        label: const Text(
-                                          "Search",
-                                          style: TextStyle(fontSize: 16),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                      _buildSearchAndFilter(),
                       const SizedBox(height: 20),
-                      // Display message if no donors
+
                       if (donors.isEmpty)
                         Center(
                           child: Text(
@@ -479,6 +302,64 @@ class _DonorsPageState extends State<DonorsPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSearchAndFilter() {
+    return SearchAndFilter(
+      title: "Search & Filter",
+      searchFields: [
+        buildRoundedTextField(
+          controller: nameController,
+          label: "Name",
+          icon: Icons.person,
+          keyboardType: TextInputType.text,
+          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]'))],
+        ),
+        buildRoundedTextField(
+          controller: contactController,
+          label: "Contact Number",
+          icon: Icons.phone,
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(10),
+          ],
+        ),
+        buildRoundedTextField(
+          controller: addressController,
+          label: "Address",
+          icon: Icons.home,
+        ),
+        SizedBox(
+          width: 350,
+          child: DropdownButtonFormField<String>(
+            value: selectedBloodType,
+            decoration: InputDecoration(
+              labelText: "Blood Type",
+              prefixIcon: Icon(Icons.bloodtype),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              labelStyle: TextStyle(fontSize: 16),
+            ),
+            items: bloodTypes.map((type) {
+              return DropdownMenuItem(
+                value: type,
+                child: Text(type, style: const TextStyle(fontSize: 16)),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                selectedBloodType = value;
+              });
+            },
+          ),
+        ),
+      ],
+      onSearch: searchDonors,
+      onReset: resetFilters,
     );
   }
 }
