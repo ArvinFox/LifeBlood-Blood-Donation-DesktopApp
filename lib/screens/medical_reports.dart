@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:file_saver/file_saver.dart';
 import 'package:open_filex/open_filex.dart';
 import 'dart:ui'; 
+import 'package:flutter/services.dart';
 
 class MedicalReportsPage extends StatefulWidget {
   const MedicalReportsPage({super.key});
@@ -43,7 +44,6 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
         print('Error parsing date: $e');
       }
     }
-
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: initialDate,
@@ -64,7 +64,6 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
         );
       },
     );
-
     if (picked != null) {
       setState(() {
         dateController.text = DateFormat('yyyy-MM-dd').format(picked);
@@ -86,6 +85,16 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
   }
 
   void searchReports() {
+    if (reportIdController.text.isEmpty && 
+      donorNameController.text.isEmpty && 
+      selectedStatus == null && 
+      dateController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter at least one filter criteria')),
+      );
+      return;
+    }
+
     String dateStr = dateController.text;
     String formattedDate = '';
     if (dateStr.isNotEmpty) {
@@ -130,104 +139,187 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
       scaffoldMessenger.hideCurrentSnackBar();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
+        const SnackBar(content: Text('Failed to process request')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              const Text(
-                'Medical Reports',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              
-              ExpansionTile(
-                title: const Text(
-                  'Filter Options',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+  return Scaffold(
+    backgroundColor: Colors.white,
+    body: SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          children: [
+            const Text(
+              'Medical Reports',
+              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            ExpansionTile(
+              title: const Text(
+                'Search & Filter',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                  color: Colors.redAccent,
                 ),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        TextField(
-                          controller: reportIdController,
-                          decoration: const InputDecoration(
-                            labelText: "Report ID",
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: donorNameController,
-                          decoration: const InputDecoration(
-                            labelText: "Donor Name",
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        DropdownButtonFormField<String>(
-                          value: selectedStatus,
-                          decoration: const InputDecoration(
-                            labelText: "Status",
-                          ),
-                          items: statuses.map((status) {
-                            return DropdownMenuItem(
-                              value: status,
-                              child: Text(status),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              selectedStatus = value;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 8),
-                        GestureDetector(
-                          onTap: () => _selectDate(context),
-                          child: AbsorbPointer(
-                            child: TextFormField(
-                              controller: dateController,
-                              decoration: const InputDecoration(
-                                labelText: "Date (YYYY-MM-DD)",
-                                suffixIcon: Icon(Icons.calendar_today),
-                              ),
-                              readOnly: true,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: resetFilters,
-                                child: const Text("Reset Filters"),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: searchReports,
-                                child: const Text("Search"),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
               ),
-              const SizedBox(height: 16),
+              collapsedShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              backgroundColor: const Color.fromARGB(33, 158, 158, 158),
+              collapsedBackgroundColor: const Color(0xFFF5F5F5),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      Wrap(
+                        spacing: 16,
+                        runSpacing: 16,
+                        children: [
+                          SizedBox(
+                            width: 350,
+                            child: _buildRoundedTextField(
+                              controller: reportIdController,
+                              label: "Report ID",
+                              icon: Icons.assignment,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                RegExp(r'[a-zA-Z0-9]'),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            width: 350,
+                            child: _buildRoundedTextField(
+                              controller: donorNameController,
+                              label: "Donor Name",
+                              icon: Icons.person,
+                              keyboardType: TextInputType.text,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                RegExp(r'[a-zA-Z ]'),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            width: 350,
+                            child: DropdownButtonFormField<String>(
+                              value: selectedStatus,
+                              decoration: InputDecoration(
+                                labelText: "Status",
+                                prefixIcon: const Icon(Icons.flag),
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 14),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                labelStyle: const TextStyle(fontSize: 16),
+                              ),
+                              items: statuses.map((status) {
+                                return DropdownMenuItem(
+                                  value: status,
+                                  child: Text(
+                                    status,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  selectedStatus = value;
+                                });
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            width: 350,
+                            child: GestureDetector(
+                              onTap: () => _selectDate(context),
+                              child: AbsorbPointer(
+                                child: TextFormField(
+                                  controller: dateController,
+                                  decoration: InputDecoration(
+                                    labelText: "Date (YYYY-MM-DD)",
+                                    prefixIcon: const Icon(Icons.calendar_today),
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 14),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    labelStyle: const TextStyle(fontSize: 16),
+                                  ),
+                                  readOnly: true,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 150,
+                            child: ElevatedButton.icon(
+                              onPressed: resetFilters,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.grey[400],
+                                foregroundColor: Colors.black,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              icon: const Icon(Icons.refresh),
+                              label: const Text(
+                                "Reset",
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 20),
+                          SizedBox(
+                            width: 150,
+                            child: ElevatedButton.icon(
+                              onPressed: searchReports,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.redAccent,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              icon: const Icon(Icons.search),
+                              label: const Text(
+                                "Search",
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
 
               Expanded(
                 child: StreamBuilder<List<MedicalReport>>(
@@ -252,6 +344,15 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
 
                       return matchesId && matchesName && matchesStatus && matchesDate;
                     }).toList();
+
+                    if (filteredReports.isEmpty) {
+                      return Center(
+                        child: Text(
+                          'No medical reports found',
+                          style: TextStyle(fontSize: 20, color: Colors.grey),
+                        ),
+                      );
+                    }
 
                     return ListView.separated(
                       itemCount: filteredReports.length,
@@ -308,6 +409,11 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
                                     Expanded(
                                       child: ElevatedButton(
                                         onPressed: () => _viewReport(report),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFFFFAE42),
+                                          foregroundColor: Colors.white,
+                                          textStyle: const TextStyle(fontSize: 16),
+                                        ),
                                         child: const Text("View Report"),
                                       ),
                                     ),
@@ -358,6 +464,31 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildRoundedTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    List<TextInputFormatter>? inputFormatters,
+    TextInputType? keyboardType,
+  }) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        labelStyle: const TextStyle(fontSize: 16),
+      ),
+      inputFormatters: inputFormatters,
+      keyboardType: keyboardType,
     );
   }
 
