@@ -8,6 +8,7 @@ class Reward {
   final DateTime endDate;
   DateTime? createdAt;
   DateTime? updatedAt;
+  String? imageName;
 
   Reward({
     this.rewardId,
@@ -17,6 +18,7 @@ class Reward {
     required this.endDate,
     this.createdAt,
     this.updatedAt,
+    this.imageName,
   });
 
   factory Reward.fromFirestore(DocumentSnapshot doc) {
@@ -30,6 +32,7 @@ class Reward {
       endDate: (data['end_date'] as Timestamp).toDate(), 
       createdAt: data['created_at'] != null ? (data['created_at'] as Timestamp).toDate() : null, 
       updatedAt: data['updated_at'] != null ? (data['updated_at'] as Timestamp).toDate() : null, 
+      imageName: data['image'] ?? '',
     );
   }
 
@@ -41,6 +44,7 @@ class Reward {
       'end_date': Timestamp.fromDate(endDate),
       'created_at': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       'updated_at': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
+      'image': imageName,
     };
   }
 }

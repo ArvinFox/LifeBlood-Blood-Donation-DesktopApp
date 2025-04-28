@@ -1,27 +1,26 @@
 import 'package:blood_donation_app/models/reward_model.dart';
+import 'package:blood_donation_app/services/supabase_service.dart';
 import 'package:blood_donation_app/utils/helpers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/intl.dart';
 
 class RewardService{
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final SupabaseService _supabaseService = SupabaseService();
   
-  //create reward
-  Future<String> addReward(Reward reward) async {
-    final docRef = _firestore.collection('rewards').doc(); 
-    final newRewardData = {
-      'reward_name': reward.rewardName,
-      'description': reward.description,
-      'start_date': reward.startDate,
-      'end_date': reward.endDate,
-      'created_at': reward.createdAt,
-    };
+  // Create reward
+  Future<void> _createReward(Reward reward) async {
+    try {
+      await _firestore.collection('rewards').doc(reward.rewardId).set(reward.toFirestore());
+    } catch (e) {
+      Helpers.debugPrintWithBorder("Error adding reward: $e");
+    }
+  }
 
-    await docRef.set(newRewardData); 
-
-    // get document id
-    return docRef.id;
+  // Get next ID
+  String _getNextRewardDocId() {
+    return _firestore.collection('rewards').doc().id;
   }
 
   // Get reward by ID
@@ -38,7 +37,7 @@ class RewardService{
   }
 
   // Update reward
-  Future<void> updateReward(Reward reward) async {
+  Future<void> _updateReward(Reward reward) async {
     try {
       await _firestore.collection('rewards').doc(reward.rewardId).update(reward.toFirestore());
     } catch (e) {
@@ -46,34 +45,75 @@ class RewardService{
     }
   }
 
-  //delete reward
-  Future<void> deleteReward(BuildContext context, String docId) async {
+  // Add/Edit reward
+  Future<void> manageReward(BuildContext context, Map<String, dynamic> data, {String? rewardId, bool isEdit = false, Future<void> Function()? onRewardManaged}) async {
     try {
-      await FirebaseFirestore.instance.collection('rewards').doc(docId).delete();
-      Helpers.showSucess(context, 'Reward deleted successfully');
+      final Reward reward = Reward(
+        rewardName: data['title'],
+        description: data['description'],
+        startDate: DateFormat('d-M-yyyy').parse(data['startDate']),
+        endDate: DateFormat('d-M-yyyy').parse(data['endDate']),
+      );
+
+      if (!isEdit) {
+        final now = DateTime.now();
+        reward.createdAt = now;
+        reward.updatedAt = now;
+
+        final newRewardId = _getNextRewardDocId();
+        reward.rewardId = newRewardId;
+
+        if (data['poster'] != null && data['poster'].toString().isNotEmpty) {
+          final imageName = await _uploadRewardImage(context, data['poster'], newRewardId);
+          reward.imageName = imageName;
+        }
+
+        await _createReward(reward);
+        
+      } else {
+        reward.rewardId = rewardId;
+        reward.createdAt = data['createdAt'];
+        reward.updatedAt = DateTime.now();
+
+        if (data['poster'] != null && data['poster'].toString().isNotEmpty) {
+          final imageName = await _uploadRewardImage(context, data['poster'], rewardId!);
+          reward.imageName = imageName;
+        }
+
+        await _updateReward(reward);
+      }
+
+      Helpers.showSucess(context, 'Reward ${isEdit ? 'updated' : 'added'} successfully');
+      
+      if (onRewardManaged != null) {
+        await onRewardManaged();
+      }
+      
     } catch (e) {
-      Helpers.showError(context, 'Failed to delete reward');
-      Helpers.debugPrintWithBorder('Delete error: $e');
+      Helpers.showError(context, 'Error ${isEdit ? 'updating' : 'adding'} reward');
+      Helpers.debugPrintWithBorder('Error ${isEdit ? 'updating' : 'creating'} reward: $e');
     }
   }
 
-  //delete reward poster from supabase when deleting a rewad
-  Future<void> deleteRewardImage(String rewardId) async {
+  Future<String?> _uploadRewardImage(BuildContext context, String base64Image, String rewardId) async {
     try {
-      final imageName = 'reward_image_$rewardId.jpg';
-      final imagePath = '$rewardId/$imageName';
+      final imageName = await _supabaseService.uploadImage('reward', base64Image, rewardId);
+      return imageName;
 
-      final response = await Supabase.instance.client.storage
-          .from('rewards')
-          .remove([imagePath]);
-
-      if (response.isEmpty) {
-        print('Image deleted successfully from Supabase Storage.');
-      } else {
-        print('Some files were not deleted: $response');
-      }
     } catch (e) {
-      print('Error deleting image from Supabase Storage: $e');
+      Helpers.debugPrintWithBorder('Image upload error: $e');
+      Helpers.showError(context, "Error uploading reward image.");
+      return null;
+    }
+  }
+
+  // Delete reward
+  Future<void> deleteReward(BuildContext context, String docId) async {
+    try {
+      await FirebaseFirestore.instance.collection('rewards').doc(docId).delete();
+    } catch (e) {
+      Helpers.showError(context, 'Failed to delete reward');
+      Helpers.debugPrintWithBorder('Error deleting reward: $e');
     }
   }
 }

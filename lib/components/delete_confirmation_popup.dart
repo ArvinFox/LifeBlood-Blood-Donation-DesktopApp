@@ -110,8 +110,8 @@ class DeleteConfirmationPopup extends StatelessWidget {
             const SizedBox(width: 12),
             ElevatedButton(
               onPressed: () async {
-                Navigator.of(context).pop();
                 await onDeleteConfirmed();
+                Navigator.of(context).pop();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF5E5E),

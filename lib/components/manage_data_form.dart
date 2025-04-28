@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:blood_donation_app/services/event_service.dart';
 import 'package:blood_donation_app/services/reward_service.dart';
+import 'package:blood_donation_app/services/supabase_service.dart';
 import 'package:blood_donation_app/utils/helpers.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +14,7 @@ class ManageDataForm extends StatefulWidget {
   final FormType formType;
   final bool? isEditMode;
   final String? id;
-  final void Function(Map<String, dynamic>, bool) onSubmit;
+  final Future<void> Function(Map<String, dynamic>, bool) onSubmit;
 
   const ManageDataForm({
     super.key, 
@@ -30,8 +32,10 @@ class _ManageDataFormState extends State<ManageDataForm> {
   final _formKey = GlobalKey<FormState>();
   final _rewardService = RewardService();
   final _eventService = EventService();
+  final _supabaseService = SupabaseService();
 
   bool _isLoading = false;
+  bool _hasData = false;
 
   final Map<String, TextEditingController> _controllers = {
     'title': TextEditingController(),
@@ -46,6 +50,7 @@ class _ManageDataFormState extends State<ManageDataForm> {
   DateTime? _selectedStartDate;
   DateTime? _selectedEndDate;
   DateTime? _selectedEventDate;
+  DateTime? _createdAt;
   String? _uploadedImageName;
 
   // Load initial data is editing
@@ -68,9 +73,18 @@ class _ManageDataFormState extends State<ManageDataForm> {
             _controllers['startDate']!.text = DateFormat('dd-MM-yyyy').format(reward.startDate);
             _controllers['endDate']!.text = DateFormat('dd-MM-yyyy').format(reward.endDate);
 
-            // fetch poster ------------------------------
+            final posterPath = "${reward.rewardId}/${reward.imageName}";
+            if (posterPath.isNotEmpty) {
+              final base64Poster = await _supabaseService.fetchImage("rewards", posterPath);
+              if (base64Poster != null) {
+                setState(() {
+                  _uploadedImageName = base64Poster;
+                });
+              }
+            }
 
             setState(() {
+              _createdAt = reward.createdAt;
               _selectedEndDate = reward.startDate;
               _selectedEndDate = reward.endDate;
             });
@@ -86,9 +100,19 @@ class _ManageDataFormState extends State<ManageDataForm> {
             _controllers['eventDate']!.text = DateFormat('dd-MM-yyyy').format(event.dateAndTime);
             _controllers['eventTime']!.text = DateFormat('h:mm a').format(event.dateAndTime);
 
-            // fetch poster ------------------------------
+            final posterPath = "${event.eventId}/${event.imageName}";
+            if (posterPath.isNotEmpty) {
+              final base64Poster = await _supabaseService.fetchImage("events", posterPath);
+
+              if (base64Poster != null) {
+                setState(() {
+                  _uploadedImageName = base64Poster;
+                });
+              }
+            }
 
             setState(() {
+              _createdAt = event.createdAt;
               _selectedEventDate = event.dateAndTime;
             });
           }
@@ -96,6 +120,7 @@ class _ManageDataFormState extends State<ManageDataForm> {
 
         setState(() {
           _isLoading = false;
+          _hasData = true;
         });
       }
     });
@@ -133,7 +158,7 @@ class _ManageDataFormState extends State<ManageDataForm> {
         ),
       ),
       contentPadding: const EdgeInsets.all(20),
-      content: _isLoading 
+      content: (_isLoading && !_hasData)
         ? CircularProgressIndicator(color: const Color.fromARGB(255, 255, 164, 164)) 
         : Form(
             key: _formKey,
@@ -179,12 +204,8 @@ class _ManageDataFormState extends State<ManageDataForm> {
 
                     _buildLabel(isReward ? 'Reward Poster' : 'Event Poster'),
                     const SizedBox(height: 8),
-
-                    // Display current poster -------------------------------------
-
                     PosterPicker(
-                      initialFileName: isEdit ? 'Selected Poster' : null,
-                      initialBase64: _uploadedImageName,
+                      initialBase64Image: _uploadedImageName,
                       onImageUploaded: (base64String) {
                         setState(() {
                           _uploadedImageName = base64String;
@@ -281,19 +302,41 @@ class _ManageDataFormState extends State<ManageDataForm> {
             ),
             const SizedBox(width: 12),
             ElevatedButton(
-              onPressed: () {
+              onPressed: _isLoading ? null : () async {
                 if (_formKey.currentState!.validate()) {
-                  final formData = {
-                    'title': _controllers['title']!.text,
-                    'description': _controllers['description']!.text,
-                    'startDate': _controllers['startDate']!.text,
-                    'endDate': _controllers['endDate']!.text,
-                    'eventTime': _controllers['eventTime']!.text,
-                    'eventDate': _controllers['eventDate']!.text,
-                    'location': _controllers['location']!.text,
-                    'poster': _uploadedImageName,
-                  };
-                  widget.onSubmit(formData, isEdit);
+                  final Map<String, dynamic> formData;
+                  
+                  if (isReward) {
+                    formData = {
+                      'title': _controllers['title']!.text,
+                      'description': _controllers['description']!.text,
+                      'startDate': _controllers['startDate']!.text,
+                      'endDate': _controllers['endDate']!.text,
+                      'createdAt': _createdAt,
+                      'poster': _uploadedImageName,
+                    };
+                  } else {
+                    formData = {
+                      'title': _controllers['title']!.text,
+                      'description': _controllers['description']!.text,
+                      'eventDate': _controllers['eventDate']!.text,
+                      'eventTime': _controllers['eventTime']!.text,
+                      'location': _controllers['location']!.text,
+                      'createdAt': _createdAt,
+                      'poster': _uploadedImageName,
+                    };
+                  }
+
+                  setState(() {
+                    _isLoading = true;
+                  });
+
+                  await widget.onSubmit(formData, isEdit);
+
+                  setState(() {
+                    _isLoading = false;
+                  });
+
                   Navigator.pop(context);
                 }
               },
@@ -392,14 +435,12 @@ class _ManageDataFormState extends State<ManageDataForm> {
 
 class PosterPicker extends StatefulWidget {
   final Function(String)? onImageUploaded;
-  final String? initialFileName;
-  final String? initialBase64;
+  final String? initialBase64Image;
 
   const PosterPicker({
     super.key,
     this.onImageUploaded,
-    this.initialFileName,
-    this.initialBase64,
+    this.initialBase64Image,
   });
 
   @override
@@ -410,14 +451,13 @@ class _PosterPickerState extends State<PosterPicker> {
   String text = 'Select Poster';
   Color btnColor = Colors.white;
 
+  Uint8List? _displayedImage;
+
   @override
   void initState() {
     super.initState();
-    if (widget.initialFileName != null) {
-      text = widget.initialFileName!.length > 20
-          ? "${widget.initialFileName!.substring(0, 20)}...."
-          : widget.initialFileName!;
-      btnColor = Colors.red;
+    if (widget.initialBase64Image != null) {
+      _displayedImage = base64Decode(widget.initialBase64Image!);
     }
   }
 
@@ -453,27 +493,43 @@ class _PosterPickerState extends State<PosterPicker> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: uploadImage,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: btnColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: const BorderSide(color: Colors.black38),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (_displayedImage != null) ...[
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.memory(
+              _displayedImage!,
+              height: 200,
+              fit: BoxFit.contain,
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: uploadImage,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: btnColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+                side: const BorderSide(color: Colors.black38),
+              ),
+            ),
+            child: Text(
+              _displayedImage == null ? 'Select Poster' : 'Change Poster',
+              style: TextStyle(
+                color: btnColor == Colors.red ? Colors.white : Colors.black,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
           ),
         ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: btnColor == Colors.red ? Colors.white : Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-      ),
+      ],
     );
   }
 }

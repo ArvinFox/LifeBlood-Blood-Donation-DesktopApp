@@ -1,27 +1,25 @@
 import 'package:blood_donation_app/models/event_model.dart';
+import 'package:blood_donation_app/services/supabase_service.dart';
 import 'package:blood_donation_app/utils/helpers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EventService{
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final SupabaseService _supabaseService = SupabaseService();
   
-  //create event
-  Future<String> addEvent(DonationEvent event) async {
-    final docRef = _firestore.collection('events').doc(); 
-    final newEventData = {
-      'event_name': event.eventName,
-      'description': event.description,
-      'date_and_time': event.dateAndTime,
-      'created_at': event.createdAt,
-      'location': event.location,
-    };
+  // Create event
+  Future<void> _createEvent(DonationEvent event) async {
+    try {
+      await _firestore.collection('events').doc(event.eventId).set(event.toFirestore());
+    } catch (e) {
+      Helpers.debugPrintWithBorder("Error adding event: $e");
+    }
+  }
 
-    await docRef.set(newEventData); 
-
-    // get document id
-    return docRef.id;
+  // Get next ID
+  String _getNextEventDocId() {
+    return _firestore.collection('events').doc().id;
   }
 
   // Get event by ID
@@ -38,7 +36,7 @@ class EventService{
   }
 
   // Update event
-  Future<void> updateEvent(DonationEvent event) async {
+  Future<void> _updateEvent(DonationEvent event) async {
     try {
       await _firestore.collection('events').doc(event.eventId).update(event.toFirestore());
     } catch (e) {
@@ -46,33 +44,75 @@ class EventService{
     }
   }
 
-   //delete event
+  // Add/Edit event
+  Future<void> manageEvent(BuildContext context, Map<String,dynamic> data, {String? eventId, bool isEdit = false, Future<void> Function()? onEventManaged}) async{
+    try{
+      final DonationEvent event = DonationEvent(
+        eventName: data['title'], 
+        description: data['description'],
+        location: data['location'], 
+        dateAndTime: Helpers.combineDateAndTime(data['eventDate'], data['eventTime']), 
+      );
+
+      if (!isEdit) {
+        final now = DateTime.now();
+        event.createdAt = now;
+        event.updatedAt = now;
+        
+        final newEventId = _getNextEventDocId();
+        event.eventId = newEventId;
+
+        if (data['poster'] != null && data['poster'].toString().isNotEmpty) {
+          final imageName = await _uploadEventImage(context, data['poster'], newEventId);
+          event.imageName = imageName;
+        }
+
+        await _createEvent(event);
+        
+      } else {
+        event.eventId = eventId;
+        event.createdAt = data['createdAt'];
+        event.updatedAt = DateTime.now();
+
+        if (data['poster'] != null && data['poster'].toString().isNotEmpty) {
+          final imageName = await _uploadEventImage(context, data['poster'], eventId!);
+          event.imageName = imageName;
+        }
+
+        await _updateEvent(event);
+      }
+
+      Helpers.showSucess(context, 'Event ${isEdit ? 'updated' : 'added'} sucessfully');
+    
+      if (onEventManaged != null) {
+        await onEventManaged();
+      }
+
+    } catch(e){
+      Helpers.showError(context, 'Error ${isEdit ? 'updating' : 'adding'} event');
+      Helpers.debugPrintWithBorder('Error ${isEdit ? 'updating' : 'creating'} event: $e');
+    }
+  }
+
+  Future<String?> _uploadEventImage(BuildContext context,String base64Image, String eventId) async {
+    try {
+      final imageName = await _supabaseService.uploadImage('event', base64Image, eventId);
+      return imageName;
+
+    } catch (e) {
+      Helpers.debugPrintWithBorder('Image upload error: $e');
+      Helpers.showError(context, "Error uploading event image.");
+      return null;
+    }
+  }
+
+   // Delete event
   Future<void> deleteEvent(BuildContext context, String docId) async {
     try {
       await FirebaseFirestore.instance.collection('events').doc(docId).delete();
     } catch (e) {
       Helpers.showError(context, 'Failed to delete event');
-      Helpers.debugPrintWithBorder('Delete error: $e');
-    }
-  }
-
-  //delete reward poster from supabase when deleting a rewad
-  Future<void> deleteEventImage(String eventId) async {
-    try {
-      final imageName = 'event_image_$eventId.jpg';
-      final imagePath = '$eventId/$imageName';
-
-      final response = await Supabase.instance.client.storage
-          .from('events')
-          .remove([imagePath]);
-
-      if (response.isEmpty) {
-        print('Image deleted successfully from Supabase Storage.');
-      } else {
-        print('Some files were not deleted: $response');
-      }
-    } catch (e) {
-      print('Error deleting image from Supabase Storage: $e');
+      Helpers.debugPrintWithBorder('Error deleting event: $e');
     }
   }
 }

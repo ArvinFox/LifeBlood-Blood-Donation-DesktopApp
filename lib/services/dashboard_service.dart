@@ -1,35 +1,41 @@
-import 'dart:convert';
-
-import 'package:blood_donation_app/models/event_model.dart';
-import 'package:blood_donation_app/models/reward_model.dart';
 import 'package:blood_donation_app/services/event_service.dart';
 import 'package:blood_donation_app/services/reward_service.dart';
 import 'package:blood_donation_app/utils/helpers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DashboardService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final rewardService = RewardService();
   final eventService = EventService();
 
-  Future<int> getTotalDonors() async {
-    final snapshot = await _firestore.collection('user').get();
-    return snapshot.size;
+  Future<int> getDonorsCount() async {
+    try {
+      final snapshot = await _firestore.collection('user').get();
+      return snapshot.size; 
+
+    } catch (e) {
+      Helpers.debugPrintWithBorder("Error fetching donors count: $e");
+      return 0;
+    }
   }
 
-  Future<int> getPendingRequests() async {
-    final snapshot = await _firestore.collection('requests').get();
-    return snapshot.size;
+  Future<int> getPendingRequestsCount() async {
+    try {
+      final snapshot = await _firestore.collection('requests').get();
+      return snapshot.size; 
+
+    } catch (e) {
+      Helpers.debugPrintWithBorder("Error fetching pending requests count: $e");
+      return 0;
+    }
   }
 
-  Future<int> getUpcomingEvents() async {
+  Future<int> getUpcomingEventsCount() async {
     try {
       final now = Timestamp.now();
       final querySnapshot =
-          await FirebaseFirestore.instance
+          await _firestore
               .collection('events')
               .where(
                 'date_and_time',
@@ -38,8 +44,20 @@ class DashboardService {
               .get();
 
       return querySnapshot.docs.length;
+
     } catch (e) {
-      debugPrint('Error fetching upcoming events: $e');
+      Helpers.debugPrintWithBorder('Error fetching upcoming events: $e');
+      return 0;
+    }
+  }
+
+  Future<int> getMedicalReportsCount() async {
+    try {
+      final snapshot = await _firestore.collection('medical_reports').get();
+      return snapshot.size; 
+
+    } catch (e) {
+      Helpers.debugPrintWithBorder("Error fetching medical reports count: $e");
       return 0;
     }
   }
@@ -71,105 +89,6 @@ class DashboardService {
     } catch (e) {
       debugPrint('Error fetching all events for calendar: $e');
       return {};
-    }
-  }
-
-  Future<void> createEvent(BuildContext context, Map<String,dynamic> data) async{
-    try{
-      final DonationEvent events = DonationEvent(
-        eventName: data['title'], 
-        description: data['description'], 
-        dateAndTime: Helpers.combineDateAndTime(data['eventDate'], data['eventTime']), 
-        createdAt: DateTime.now(),
-        location: data['location'],
-      );
-
-      final eventId = await eventService.addEvent(events);
-
-      if(data['poster'] != null && data['poster'].toString().isNotEmpty){
-        await uploadEventImage(context, data['poster'], eventId);
-      }
-
-      Helpers.showSucess(context, 'Event added sucessfully');
-    } catch(e){
-      Helpers.showError(context, 'Error.....');
-      Helpers.debugPrintWithBorder('Error : $e');
-    }
-  }
-
-  Future<void> uploadEventImage(BuildContext context,String base64Image, String eventId) async {
-    try {
-      final imageBytes = base64Decode(base64Image);
-
-      final imageName = 'event_image_$eventId.jpg';
-      final imagePath = '$eventId/$imageName';
-
-      await Supabase.instance.client.storage
-        .from('events')
-        .uploadBinary(
-          imagePath,
-          imageBytes,
-          fileOptions: const FileOptions(contentType: 'image/jpeg'), 
-        );
-
-      final publicUrl = Supabase.instance.client.storage
-        .from('events')
-        .getPublicUrl(imagePath);
-
-      Helpers.debugPrintWithBorder('Event image uploaded to: $publicUrl');
-
-        } catch (e) {
-      Helpers.debugPrintWithBorder('Image upload error: $e');
-      Helpers.showError(context, "Error uploading event image.");
-    }
-  }
-
-  Future<void> createReward(BuildContext context,Map<String, dynamic> data) async {
-    try {
-      final dateFormat = DateFormat('d-M-yyyy');
-      final Reward reward = Reward(
-        rewardName: data['title'],
-        description: data['description'],
-        startDate: dateFormat.parse(data['startDate']),
-        endDate: dateFormat.parse(data['endDate']),
-        createdAt: DateTime.now(),
-      );
-      final rewardId = await rewardService.addReward(reward);
-
-      if (data['poster'] != null && data['poster'].toString().isNotEmpty) {
-        await uploadRewardImage(context, data['poster'], rewardId);
-      }
-
-      Helpers.showSucess(context, 'Reward added successfully');
-    } catch (e) {
-      Helpers.showError(context, 'Error.....');
-      Helpers.debugPrintWithBorder('Error : $e');
-    }
-  }
-
-  Future<void> uploadRewardImage(BuildContext context,String base64Image,String rewardId) async {
-    try {
-      final imageBytes = base64Decode(base64Image);
-      final imageName = 'reward_image_$rewardId.jpg';
-      final imagePath = '$rewardId/$imageName';
-
-      await Supabase.instance.client.storage
-        .from('rewards')
-        .uploadBinary(
-          imagePath,
-          imageBytes,
-          fileOptions: const FileOptions(contentType: 'image/jpeg'),
-        );
-
-      final publicUrl = Supabase.instance.client.storage
-        .from('rewards')
-        .getPublicUrl(imagePath);
-        
-      Helpers.debugPrintWithBorder('Reward image uploaded to: $publicUrl');
-
-        } catch (e) {
-      Helpers.debugPrintWithBorder('Image upload error: $e');
-      Helpers.showError(context, "Error uploading reward image.");
     }
   }
 }

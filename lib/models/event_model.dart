@@ -8,6 +8,7 @@ class DonationEvent {
   final DateTime dateAndTime;
   DateTime? createdAt;
   DateTime? updatedAt;
+  String? imageName;
 
   DonationEvent({
     this.eventId,
@@ -17,6 +18,7 @@ class DonationEvent {
     required this.dateAndTime,
     this.createdAt,
     this.updatedAt,
+    this.imageName,
   });
 
   factory DonationEvent.fromFirestore(DocumentSnapshot doc) {
@@ -30,6 +32,7 @@ class DonationEvent {
       dateAndTime: (data['date_and_time'] as Timestamp).toDate(), 
       createdAt: data['created_at'] != null ? (data['created_at'] as Timestamp).toDate() : null,
       updatedAt: data['updated_at'] != null ? (data['updated_at'] as Timestamp).toDate() : null, 
+      imageName: data['image'] ?? '',
     );
   }
 
@@ -38,9 +41,10 @@ class DonationEvent {
       'event_name': eventName,
       'description': description,
       'location': location,
-      'date': Timestamp.fromDate(dateAndTime),
+      'date_and_time': Timestamp.fromDate(dateAndTime),
       'created_at': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       'updated_at': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
+      'image': imageName,
     };
   }
 }

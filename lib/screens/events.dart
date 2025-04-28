@@ -72,7 +72,7 @@ class _EventsScreenState extends State<EventsScreen> {
         events = filtered.map((doc) => DonationEvent.fromFirestore(doc)).toList();
       });
     } catch (e) {
-      print('Error fetching events: $e');
+      Helpers.debugPrintWithBorder('Error fetching events: $e');
       Helpers.showError(context, 'Failed to load events');
     }
   }
@@ -86,53 +86,7 @@ class _EventsScreenState extends State<EventsScreen> {
     eventDateController.clear();
     locationController.clear();
     fetchEvents();
-  }
-
-  Future<void> manageEvent(BuildContext context, Map<String,dynamic> data, {String? eventId, bool isEdit = false}) async{
-    try{
-      final DonationEvent event = DonationEvent(
-        eventName: data['title'], 
-        description: data['description'],
-        location: data['location'], 
-        dateAndTime: Helpers.combineDateAndTime(data['eventDate'], data['eventTime']), 
-      );
-
-      if (!isEdit) {
-        event.createdAt = DateTime.now();
-        
-        final eventId = await eventService.addEvent(event);
-
-        if (data['poster'] != null && data['poster'].toString().isNotEmpty) {
-          await uploadEventImage(context, data['poster'], eventId);
-        }
-        
-      } else {
-        event.eventId = eventId;
-        event.updatedAt = DateTime.now();
-
-        await eventService.updateEvent(event);
-      }
-
-      Helpers.showSucess(context, 'Event ${isEdit ? 'updated' : 'added'} sucessfully');
-      fetchEvents();
-
-    } catch(e){
-      Helpers.showError(context, 'Error ${isEdit ? 'updating' : 'adding'} event');
-      Helpers.debugPrintWithBorder('Error ${isEdit ? 'updating' : 'creating'} event: $e');
-    }
-  }
-
-  Future<void> uploadEventImage(BuildContext context,String base64Image, String eventId) async {
-    try {
-      final publicUrl = _supabaseService.uploadImage('event', base64Image, eventId);
-
-      Helpers.debugPrintWithBorder('Event image uploaded to: $publicUrl');
-
-    } catch (e) {
-      Helpers.debugPrintWithBorder('Image upload error: $e');
-      Helpers.showError(context, "Error uploading event image.");
-    }
-  }
+  }  
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +114,11 @@ class _EventsScreenState extends State<EventsScreen> {
                       builder: (_) => ManageDataForm(
                         formType: FormType.events,
                         onSubmit: (data, isEdit) async{
-                          await manageEvent(context, data);
+                          await eventService.manageEvent(
+                            context, 
+                            data, 
+                            onEventManaged: fetchEvents,
+                          );
                         },
                       ),
                     );
@@ -220,7 +178,14 @@ class _EventsScreenState extends State<EventsScreen> {
                                         id: event.eventId,
                                         formType: FormType.events,
                                         onSubmit: (data, isEdit) async {
-                                          await manageEvent(context, data, isEdit: true, eventId: event.eventId);
+                                          await eventService.manageEvent(
+                                            context, 
+                                            data, 
+                                            isEdit: true, 
+                                            eventId: 
+                                            event.eventId, 
+                                            onEventManaged: fetchEvents,
+                                          );
                                         },
                                       ),
                                     );
@@ -243,9 +208,10 @@ class _EventsScreenState extends State<EventsScreen> {
                                         itemType: "event",
                                         itemName: event.eventName,
                                         onDeleteConfirmed: () async {
-                                          await eventService.deleteEventImage(event.eventId!);
+                                          await _supabaseService.deleteImage('event', event.eventId!);
                                           await eventService.deleteEvent(context, event.eventId!);
                                           Helpers.showSucess(context, 'Event deleted successfully');
+                                          fetchEvents();
                                         },
                                       ),
                                     );

@@ -205,29 +205,48 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
                         final isRejected = report.status == 'Rejected';
 
                         return Card(
-                          elevation: 3,
-                          margin: EdgeInsets.zero,
+                          elevation: 4,
+                          margin: const EdgeInsets.symmetric(vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          color: const Color.fromARGB(255, 254, 249, 239),
                           child: Padding(
-                            padding: const EdgeInsets.all(16.0),
+                            padding: const EdgeInsets.all(20),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      "Report ID: ${report.reportId}",
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
+                                    Icon(Icons.description, size: 30, color: Colors.blueGrey),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Report ID: ${report.reportId}",
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            "Date: ${DateFormat('yyyy-MM-dd').format(report.date)}",
+                                            style: TextStyle(
+                                              color: Colors.grey.shade600,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 6),
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                       decoration: BoxDecoration(
-                                        color: _getStatusColor(report.status)
-                                            .withOpacity(0.2),
+                                        color: _getStatusColor(report.status).withOpacity(0.2),
                                         borderRadius: BorderRadius.circular(20),
                                       ),
                                       child: Text(
@@ -235,60 +254,65 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
                                         style: TextStyle(
                                           color: _getStatusColor(report.status),
                                           fontWeight: FontWeight.bold,
+                                          fontSize: 14,
                                         ),
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 16),
                                 _buildInfoRow("Donor Name", report.donorName),
                                 _buildInfoRow("Report Type", report.reportType),
-                                _buildInfoRow("Date", 
-                                    DateFormat('yyyy-MM-dd').format(report.date)),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: 20),
                                 Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
-                                      child: ElevatedButton(
+                                      child: ElevatedButton.icon(
                                         onPressed: () => _viewReport(report),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: const Color(0xFFFFAE42),
                                           foregroundColor: Colors.white,
-                                          textStyle: const TextStyle(fontSize: 16),
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
                                         ),
-                                        child: const Text("View Report"),
+                                        icon: const Icon(Icons.visibility),
+                                        label: const Text("View Report"),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
-                                      child: ElevatedButton(
+                                      child: ElevatedButton.icon(
+                                        onPressed: isApproved
+                                            ? null
+                                            : () => _reportService.updateReportStatus(
+                                                report.reportId, 'Approved'),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: isApproved
                                               ? Colors.green.withOpacity(0.5)
                                               : Colors.green,
                                           foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
                                         ),
-                                        onPressed: isApproved
-                                            ? null
-                                            : () => _reportService.updateReportStatus(
-                                                report.reportId, 'Approved'),
-                                        child: const Text("Approve"),
+                                        icon: const Icon(Icons.check),
+                                        label: const Text("Approve"),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
-                                      child: ElevatedButton(
+                                      child: ElevatedButton.icon(
+                                        onPressed: isRejected
+                                            ? null
+                                            : () => _reportService.updateReportStatus(
+                                                report.reportId, 'Rejected'),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: isRejected
                                               ? Colors.red.withOpacity(0.5)
                                               : Colors.red,
                                           foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
                                         ),
-                                        onPressed: isRejected
-                                            ? null
-                                            : () => _reportService.updateReportStatus(
-                                                report.reportId, 'Rejected'),
-                                        child: const Text("Reject"),
+                                        icon: const Icon(Icons.close),
+                                        label: const Text("Reject"),
                                       ),
                                     ),
                                   ],

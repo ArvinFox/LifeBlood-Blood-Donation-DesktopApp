@@ -82,52 +82,6 @@ class _RewardscreenState extends State<Rewardscreen> {
     fetchRewards();
   }
 
-  Future<void> manageReward(BuildContext context, Map<String, dynamic> data, {String? rewardId, bool isEdit = false}) async {
-    try {
-      final Reward reward = Reward(
-        rewardName: data['title'],
-        description: data['description'],
-        startDate: DateFormat('d-M-yyyy').parse(data['startDate']),
-        endDate: DateFormat('d-M-yyyy').parse(data['endDate']),
-      );
-
-      if (!isEdit) {
-        reward.createdAt = DateTime.now();
-
-        final createdRewardId = await rewardService.addReward(reward);
-
-        if (data['poster'] != null && data['poster'].toString().isNotEmpty) {
-          await uploadRewardImage(context, data['poster'], createdRewardId);
-        }
-        
-      } else {
-        reward.rewardId = rewardId;
-        reward.updatedAt = DateTime.now();
-
-        await rewardService.updateReward(reward);
-      }
-
-      Helpers.showSucess(context, 'Reward ${isEdit ? 'updated' : 'added'} successfully');
-      fetchRewards();
-      
-    } catch (e) {
-      Helpers.showError(context, 'Error ${isEdit ? 'updating' : 'adding'} reward');
-      Helpers.debugPrintWithBorder('Error ${isEdit ? 'updating' : 'creating'} reward: $e');
-    }
-  }
-
-  Future<void> uploadRewardImage(BuildContext context, String base64Image, String rewardId) async {
-    try {
-      final publicUrl = _supabaseService.uploadImage('reward', base64Image, rewardId);
-
-      Helpers.debugPrintWithBorder('Reward image uploaded to: $publicUrl');
-
-    } catch (e) {
-      Helpers.debugPrintWithBorder('Image upload error: $e');
-      Helpers.showError(context, "Error uploading reward image.");
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -154,7 +108,11 @@ class _RewardscreenState extends State<Rewardscreen> {
                       builder:(_) => ManageDataForm(
                         formType: FormType.rewards,
                         onSubmit: (data, isEdit) async {
-                          await manageReward(context, data);
+                          await rewardService.manageReward(
+                            context, 
+                            data, 
+                            onRewardManaged: fetchRewards,
+                          );
                         },
                       ),
                     );
@@ -215,7 +173,13 @@ class _RewardscreenState extends State<Rewardscreen> {
                                         id: reward.rewardId,
                                         formType: FormType.rewards,
                                         onSubmit: (data, isEdit) async {
-                                          await manageReward(context, data, isEdit: true, rewardId: reward.rewardId);
+                                          await rewardService.manageReward(
+                                            context, 
+                                            data,  
+                                            isEdit: true, 
+                                            rewardId: reward.rewardId,
+                                            onRewardManaged: fetchRewards,
+                                          );
                                         },
                                       ),
                                     );
@@ -238,9 +202,10 @@ class _RewardscreenState extends State<Rewardscreen> {
                                         itemType: "reward",
                                         itemName: reward.rewardName,
                                         onDeleteConfirmed: () async {
-                                          await rewardService.deleteRewardImage(reward.rewardId!);
+                                          await _supabaseService.deleteImage('reward', reward.rewardId!);
                                           await rewardService.deleteReward(context, reward.rewardId!);
                                           Helpers.showSucess(context, 'Reward deleted successfully');
+                                          fetchRewards();
                                         },
                                       ),
                                     );
