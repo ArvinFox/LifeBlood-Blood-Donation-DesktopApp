@@ -18,10 +18,10 @@ class LifeBlood extends StatelessWidget {
           return MaterialApp(
             title: "LifeBlood",
             debugShowCheckedModeBanner: false,
-            routes: UserRoutes.routes,
             home: authProvider.currentUser == null
               ? const LoginScreen()
               : const MainLayoutScreen(child: DashboardPage()),
+            routes: UserRoutes.routes,
           );
         },
       ),

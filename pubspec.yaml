@@ -46,6 +46,7 @@ dependencies:
 
   # Calendar UI
   table_calendar: ^3.2.0
+  window_size: ^0.1.0
 
 # -----------------------------------------------------------------------
 # Development Dependencies: Linting and Testing

@@ -5,7 +5,10 @@ class Sidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentRoute = ModalRoute.of(context)?.settings.name;
+    String? currentRoute = ModalRoute.of(context)?.settings.name;
+    if (currentRoute == null || currentRoute == '/') {
+      currentRoute = '/dashboard';
+    }
 
     return Material(
       elevation: 6,

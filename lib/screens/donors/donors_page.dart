@@ -38,11 +38,21 @@ class _DonorsPageState extends State<DonorsPage> {
       }
 
       final snapshot = await query.get();
+      final searchContact = contactController.text.trim();
+      final normalizedSearchContact = normalizePhoneNumber(searchContact);
+
       final filteredDocs = snapshot.docs.where((doc) {
         final data = doc.data() as Map<String, dynamic>;
         final nameMatch = nameController.text.isEmpty || data['fullName']?.toString().toLowerCase().contains(nameController.text.toLowerCase()) == true;
-        final contactMatch =  contactController.text.isEmpty || data['contactNumber']?.toString().toLowerCase().contains(contactController.text.toLowerCase()) == true;
+
+        final contact = data['contactNumber']?.toString() ?? '';
+        final normalizedContact = normalizePhoneNumber(contact);
+        final contactMatch = contactController.text.isEmpty ||
+            normalizedContact.contains(normalizedSearchContact) ||
+            contact.contains(searchContact);
+
         final addressMatch = addressController.text.isEmpty || data['address']?.toString().toLowerCase().contains(addressController.text.toLowerCase()) == true;
+        
         return nameMatch && contactMatch && addressMatch;
       }).toList();
 
@@ -80,6 +90,14 @@ class _DonorsPageState extends State<DonorsPage> {
     } catch (e) {
       print('Error filtering donors: $e');
     }
+  }
+
+  String normalizePhoneNumber(String input) {
+    input = input.replaceAll(RegExp(r'\s+|-'), '');
+    if (input.startsWith('0')) {
+      return input.replaceFirst('0', '+94');
+    }
+    return input;
   }
 
   void searchDonors() {
