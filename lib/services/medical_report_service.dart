@@ -23,11 +23,35 @@ class MedicalReportService {
       .doc(reportId)
       .update({'status': newStatus});
 
+    // Update donor verification status
     bool isDonorVerified = newStatus == 'Approved';
     await _firestore
       .collection('user')
       .doc(reportId)
       .update({'isDonorVerified': isDonorVerified});
+
+    // Delete any existing user verification status notifications
+    final existingNotifications = await _firestore
+      .collection('notifications')
+      .where('userId', isEqualTo: reportId)
+      .where('type', isEqualTo: 'verification_status')
+      .get();
+    
+    for (final doc in existingNotifications.docs) {
+      await _firestore.collection('notifications').doc(doc.id).delete();
+    }
+
+    // Send notification to user
+    await _firestore
+      .collection('notifications')
+      .doc()
+      .set({
+        "isRead": false,
+        "status": newStatus.toLowerCase(),
+        "type": "verification_status",
+        "userId": reportId,
+        "timestamp": DateTime.now(),
+      });
   }
 
   Future<Uint8List> downloadFile(String filePath) async {

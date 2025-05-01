@@ -14,26 +14,28 @@ environment:
 # -----------------------------------------------------------------------
 dependencies:
   flutter:
-    sdk: flutter
+    sdk: flutter  # Core Flutter SDK
 
-  # Cupertino icons (used on iOS-styled widgets)
+  # Cupertino icons (used for iOS-style icons/widgets)
   cupertino_icons: ^1.0.8
   
-  # File picker (for selecting images, documents, etc.)
+  # File picker for selecting any type of file (images, documents, etc.)
   file_picker: ^9.0.2
 
-  # Open files
+  # Open files using the default installed application
   open_filex: ^4.7.0
 
-  # File saver (for downloading files)
+  # Allows saving files to device storage (e.g., downloads)
   file_saver: ^0.2.14
 
-  # Date and time formatting
+  # Internationalization and date/time formatting
   intl: ^0.20.2
 
-  # Firebase authentication and core
-  firebase_auth: ^5.5.2
+  # Firebase core initialization
   firebase_core: ^3.13.0
+
+  # Firebase authentication support
+  firebase_auth: ^5.5.2
 
   # Firestore database
   cloud_firestore: ^5.6.5
@@ -46,6 +48,8 @@ dependencies:
 
   # Calendar UI
   table_calendar: ^3.2.0
+  
+  # Set custom window size and constraints (for desktop apps)
   window_size: ^0.1.0
 
 # -----------------------------------------------------------------------
