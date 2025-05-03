@@ -46,11 +46,14 @@ dependencies:
   # State management
   provider: ^6.1.4
 
-  # Calendar UI
+  # Interactive calendar UI
   table_calendar: ^3.2.0
   
   # Set custom window size and constraints (for desktop apps)
   window_size: ^0.1.0
+  
+  # PDF viewer
+  syncfusion_flutter_pdfviewer: ^29.1.40
 
 # -----------------------------------------------------------------------
 # Development Dependencies: Linting and Testing
@@ -68,7 +71,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # Asset directories
+  # Asset directories (images, icons, etc.)
   assets:
     - assets/images/
     - assets/icons/

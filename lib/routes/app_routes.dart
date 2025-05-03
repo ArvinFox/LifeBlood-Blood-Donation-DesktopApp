@@ -5,7 +5,7 @@ import 'package:blood_donation_app/screens/dashboard.dart';
 import 'package:blood_donation_app/screens/donors/donors_page.dart';
 import 'package:blood_donation_app/screens/donors/request_donors_page.dart';
 import 'package:blood_donation_app/screens/events.dart';
-import 'package:blood_donation_app/screens/medical_reports.dart';
+import 'package:blood_donation_app/screens/medical-reports/medical_reports.dart';
 import 'package:blood_donation_app/screens/rewards.dart';
 import 'package:flutter/material.dart';
 

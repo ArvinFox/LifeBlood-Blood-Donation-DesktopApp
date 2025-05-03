@@ -1,10 +1,10 @@
 import 'package:blood_donation_app/components/search_and_filter.dart';
 import 'package:blood_donation_app/models/medical_report_model.dart';
+import 'package:blood_donation_app/screens/medical-reports/report_viewer_screen.dart';
 import 'package:blood_donation_app/services/medical_report_service.dart';
+import 'package:blood_donation_app/utils/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:file_saver/file_saver.dart';
-import 'package:open_filex/open_filex.dart';
 import 'dart:ui'; 
 import 'package:flutter/services.dart';
 
@@ -33,6 +33,7 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
     reportIdController.dispose();
     donorNameController.dispose();
     dateController.dispose();
+
     super.dispose();
   }
 
@@ -76,6 +77,7 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
     reportIdController.clear();
     donorNameController.clear();
     dateController.clear();
+
     setState(() {
       selectedStatus = null;
       filterReportId = '';
@@ -122,25 +124,25 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
     try {
       final scaffoldMessenger = ScaffoldMessenger.of(context);
       scaffoldMessenger.showSnackBar(
-        const SnackBar(content: Text('Downloading report...')),
+        const SnackBar(content: Text('Loading report...')),
       );
 
       final String fullFilePath = '${report.reportId}/${report.filePath}';
       final fileBytes = await _reportService.downloadFile(fullFilePath);
-      final fileName = report.filePath.split('/').last;
-
-      final path = await FileSaver.instance.saveFile(
-        name: fileName,
-        bytes: fileBytes,
-        ext: fileName.split('.').last,
-      );
-
-      await OpenFilex.open(path);
 
       scaffoldMessenger.hideCurrentSnackBar();
+
+      Navigator.push(
+        context, 
+        MaterialPageRoute(
+          builder: (_) => ReportViewerScreen(report: report, fileBytes: fileBytes),
+        ),
+      );
+
     } catch (e) {
+      Helpers.debugPrintWithBorder("Error loading report: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to process request')),
+        const SnackBar(content: Text('Failed to load report')),
       );
     }
   }
@@ -201,8 +203,6 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
                       separatorBuilder: (context, index) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final report = filteredReports[index];
-                        final isApproved = report.status == 'Approved';
-                        final isRejected = report.status == 'Rejected';
 
                         return Card(
                           elevation: 4,
@@ -264,58 +264,19 @@ class _MedicalReportsPageState extends State<MedicalReportsPage> {
                                 _buildInfoRow("Donor Name", report.donorName),
                                 _buildInfoRow("Report Type", report.reportType),
                                 const SizedBox(height: 20),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: ElevatedButton.icon(
-                                        onPressed: () => _viewReport(report),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(0xFFFFAE42),
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(vertical: 12),
-                                        ),
-                                        icon: const Icon(Icons.visibility),
-                                        label: const Text("View Report"),
-                                      ),
+
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () => _viewReport(report),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFFFFAE42),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                                     ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: ElevatedButton.icon(
-                                        onPressed: isApproved
-                                            ? null
-                                            : () => _reportService.updateReportStatus(
-                                                report.reportId, 'Approved'),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: isApproved
-                                              ? Colors.green.withOpacity(0.5)
-                                              : Colors.green,
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(vertical: 12),
-                                        ),
-                                        icon: const Icon(Icons.check),
-                                        label: const Text("Approve"),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: ElevatedButton.icon(
-                                        onPressed: isRejected
-                                            ? null
-                                            : () => _reportService.updateReportStatus(
-                                                report.reportId, 'Rejected'),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: isRejected
-                                              ? Colors.red.withOpacity(0.5)
-                                              : Colors.red,
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(vertical: 12),
-                                        ),
-                                        icon: const Icon(Icons.close),
-                                        label: const Text("Reject"),
-                                      ),
-                                    ),
-                                  ],
+                                    icon: const Icon(Icons.visibility),
+                                    label: const Text("View Report"),
+                                  ),
                                 ),
                               ],
                             ),

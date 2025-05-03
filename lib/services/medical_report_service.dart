@@ -1,7 +1,6 @@
-import 'dart:typed_data';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:blood_donation_app/models/medical_report_model.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MedicalReportService {
