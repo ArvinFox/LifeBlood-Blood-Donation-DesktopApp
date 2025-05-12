@@ -18,7 +18,16 @@ class _DonorsPageState extends State<DonorsPage> {
   final TextEditingController addressController = TextEditingController();
   String? selectedBloodType;
 
-  final List<String> bloodTypes = ['A+','A-','B+','B-','AB+','AB-','O+','O-'];
+  final List<String> bloodTypes = [
+    'A+',
+    'A-',
+    'B+',
+    'B-',
+    'AB+',
+    'AB-',
+    'O+',
+    'O-',
+  ];
   List<Map<String, String>> donors = [];
 
   @override
@@ -36,56 +45,76 @@ class _DonorsPageState extends State<DonorsPage> {
           query = query.where('bloodType', isEqualTo: selectedBloodType);
         }
       }
-
       final snapshot = await query.get();
       final searchContact = contactController.text.trim();
       final normalizedSearchContact = normalizePhoneNumber(searchContact);
 
-      final filteredDocs = snapshot.docs.where((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        final nameMatch = nameController.text.isEmpty || data['fullName']?.toString().toLowerCase().contains(nameController.text.toLowerCase()) == true;
+      final filteredDocs =
+          snapshot.docs.where((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            final nameMatch =
+                nameController.text.isEmpty ||
+                data['fullName']?.toString().toLowerCase().contains(
+                      nameController.text.toLowerCase(),
+                    ) ==
+                    true;
 
-        final contact = data['contactNumber']?.toString() ?? '';
-        final normalizedContact = normalizePhoneNumber(contact);
-        final contactMatch = contactController.text.isEmpty ||
-            normalizedContact.contains(normalizedSearchContact) ||
-            contact.contains(searchContact);
+            final contact = data['contactNumber']?.toString() ?? '';
+            final normalizedContact = normalizePhoneNumber(contact);
+            final contactMatch =
+                contactController.text.isEmpty ||
+                normalizedContact.contains(normalizedSearchContact) ||
+                contact.contains(searchContact);
 
-        final addressMatch = addressController.text.isEmpty || data['address']?.toString().toLowerCase().contains(addressController.text.toLowerCase()) == true;
-        
-        return nameMatch && contactMatch && addressMatch;
-      }).toList();
+            final addressMatch =
+                addressController.text.isEmpty ||
+                data['address']?.toString().toLowerCase().contains(
+                      addressController.text.toLowerCase(),
+                    ) ==
+                    true;
+
+            return nameMatch && contactMatch && addressMatch;
+          }).toList();
 
       setState(() {
         donors =
-            filteredDocs.map((doc) {
-              final data = doc.data() as Map<String, dynamic>;
-              return {
-                'fullName': (data['fullName'] ?? '').toString(),
-                'bloodType': (data['bloodType'] ?? '').toString(),
-                'contactNumber': (data['contactNumber'] ?? '').toString(),
-                'address': (data['address'] ?? '').toString(),
-                'city': (data['city'] ?? '').toString(),
-                'province': (data['province'] ?? '').toString(),
-                'email': (data['email'] ?? '').toString(),
-                'dob':
-                    data['dob'] != null && data['dob'] is Timestamp
-                        ? DateFormat(
-                          'yyyy-MM-dd',
-                        ).format((data['dob'] as Timestamp).toDate())
-                        : '',
-                'nic': (data['nic'] ?? '').toString(),
-                'gender': (data['gender'] ?? '').toString(),
-                'healthConditions': (data['healthConditions'] ?? '').toString(),
-                'createdAt':
-                    data['createdAt'] != null &&
-                            data['createdAt'] is Timestamp
-                        ? DateFormat(
-                          'yyyy-MM-dd',
-                        ).format((data['createdAt'] as Timestamp).toDate())
-                        : '',
-              };
-            }).toList();
+            filteredDocs
+                .where((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  final fullName = data['fullName']?.toString().trim() ?? '';
+                  // Getting only the registered users
+                  return fullName.isNotEmpty;
+                })
+                .map((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  return {
+                    'fullName': (data['fullName'] ?? '').toString(),
+                    'bloodType': (data['bloodType'] ?? '').toString(),
+                    'contactNumber': (data['contactNumber'] ?? '').toString(),
+                    'address': (data['address'] ?? '').toString(),
+                    'city': (data['city'] ?? '').toString(),
+                    'province': (data['province'] ?? '').toString(),
+                    'email': (data['email'] ?? '').toString(),
+                    'dob':
+                        data['dob'] != null && data['dob'] is Timestamp
+                            ? DateFormat(
+                              'yyyy-MM-dd',
+                            ).format((data['dob'] as Timestamp).toDate())
+                            : '',
+                    'nic': (data['nic'] ?? '').toString(),
+                    'gender': (data['gender'] ?? '').toString(),
+                    'healthConditions':
+                        (data['healthConditions'] ?? '').toString(),
+                    'createdAt':
+                        data['createdAt'] != null &&
+                                data['createdAt'] is Timestamp
+                            ? DateFormat(
+                              'yyyy-MM-dd',
+                            ).format((data['createdAt'] as Timestamp).toDate())
+                            : '',
+                  };
+                })
+                .toList();
       });
     } catch (e) {
       print('Error filtering donors: $e');
@@ -135,7 +164,9 @@ class _DonorsPageState extends State<DonorsPage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: const Color.fromARGB(255, 255, 247, 247),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           elevation: 16,
           content: Container(
             width: 500,
@@ -169,59 +200,77 @@ class _DonorsPageState extends State<DonorsPage> {
                   const SizedBox(height: 20),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: donor.entries.map((entry) {
-                      final label = fieldLabels[entry.key] ?? entry.key;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              label,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade200,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: SelectableText(
-                                      entry.value.isNotEmpty ? entry.value : "-",
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
+                    children:
+                        donor.entries.map((entry) {
+                          final label = fieldLabels[entry.key] ?? entry.key;
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  label,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: Colors.black87,
                                   ),
-                                  IconButton(
-                                    icon: const Icon(Icons.copy, size: 20, color: Colors.grey),
-                                    onPressed: () {
-                                      Clipboard.setData(ClipboardData(text: entry.value));
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text('$label copied to clipboard!'),
-                                          duration: const Duration(seconds: 1),
+                                ),
+                                const SizedBox(height: 4),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade200,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: SelectableText(
+                                          entry.value.isNotEmpty
+                                              ? entry.value
+                                              : "-",
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            color: Colors.black87,
+                                          ),
                                         ),
-                                      );
-                                    },
-                                    tooltip: 'Copy',
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.copy,
+                                          size: 20,
+                                          color: Colors.grey,
+                                        ),
+                                        onPressed: () {
+                                          Clipboard.setData(
+                                            ClipboardData(text: entry.value),
+                                          );
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                '$label copied to clipboard!',
+                                              ),
+                                              duration: const Duration(
+                                                seconds: 1,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        tooltip: 'Copy',
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
+                          );
+                        }).toList(),
                   ),
                   const SizedBox(height: 24),
                   Center(
@@ -229,7 +278,10 @@ class _DonorsPageState extends State<DonorsPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.redAccent,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 14,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -289,28 +341,32 @@ class _DonorsPageState extends State<DonorsPage> {
                             'Action',
                           ],
                           rows:
-                            donors.map((donor) {
-                              return [
-                                donor['fullName'],
-                                donor['bloodType'],
-                                donor['contactNumber'],
-                                donor['address'],
-                                Center(
-                                  child: SizedBox(
-                                    width: 100,
-                                    child: ElevatedButton(
-                                      onPressed: () => showDonorPopup(donor),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(0xFFFFAE42),
-                                        foregroundColor: Colors.white,
-                                        textStyle: const TextStyle(fontSize: 16),
+                              donors.map((donor) {
+                                return [
+                                  donor['fullName'],
+                                  donor['bloodType'],
+                                  donor['contactNumber'],
+                                  donor['address'],
+                                  Center(
+                                    child: SizedBox(
+                                      width: 100,
+                                      child: ElevatedButton(
+                                        onPressed: () => showDonorPopup(donor),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(
+                                            0xFFFFAE42,
+                                          ),
+                                          foregroundColor: Colors.white,
+                                          textStyle: const TextStyle(
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        child: const Text("Details"),
                                       ),
-                                      child: const Text("Details"),
                                     ),
                                   ),
-                                ),
-                              ];
-                            }).toList(),
+                                ];
+                              }).toList(),
                         ),
                     ],
                   ),
@@ -332,7 +388,9 @@ class _DonorsPageState extends State<DonorsPage> {
           label: "Name",
           icon: Icons.person,
           keyboardType: TextInputType.text,
-          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]'))],
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]')),
+          ],
         ),
         buildRoundedTextField(
           controller: contactController,
@@ -358,16 +416,22 @@ class _DonorsPageState extends State<DonorsPage> {
               prefixIcon: Icon(Icons.bloodtype),
               filled: true,
               fillColor: Colors.white,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               labelStyle: TextStyle(fontSize: 16),
             ),
-            items: bloodTypes.map((type) {
-              return DropdownMenuItem(
-                value: type,
-                child: Text(type, style: const TextStyle(fontSize: 16)),
-              );
-            }).toList(),
+            items:
+                bloodTypes.map((type) {
+                  return DropdownMenuItem(
+                    value: type,
+                    child: Text(type, style: const TextStyle(fontSize: 16)),
+                  );
+                }).toList(),
             onChanged: (value) {
               setState(() {
                 selectedBloodType = value;

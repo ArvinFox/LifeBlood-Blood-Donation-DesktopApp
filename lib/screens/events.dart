@@ -50,11 +50,11 @@ class _EventsScreenState extends State<EventsScreen> {
         : null;
     
       final filtered = snapshot.docs.where((item) {
-        final rewardName = item['event_name']?.toString().toLowerCase() ?? '';
+        final eventName = item['event_name']?.toString().toLowerCase() ?? '';
         final location = item['location']?.toString().toLowerCase() ?? '';
         final eventDateTimestamp = item['date_and_time'] as Timestamp?;
 
-        final nameMatch = eventNameController.text.isEmpty || rewardName.contains(eventNameController.text.toLowerCase());
+        final nameMatch = eventNameController.text.isEmpty || eventName.contains(eventNameController.text.toLowerCase());
 
         final locationMatch = locationController.text.isEmpty || location.contains(locationController.text.toLowerCase());
 
