@@ -2,6 +2,8 @@
 
 A new Flutter project.
 
+Mobile Version GitHub Link: https://github.com/ArvinFox/LifeBlood-Blood-Donation-App
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
